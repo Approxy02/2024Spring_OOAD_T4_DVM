@@ -13,6 +13,11 @@ public class CalculatorTest {
     }
 
     @Test
+    public void testAddition2() {
+        assertEquals(6, calculator.add(3, 3), "3 + 3 should equal 5");
+    }
+
+    @Test
     public void testSubtraction() {
         assertEquals(1, calculator.subtract(3, 2), "3 - 2 should equal 1");
     }
