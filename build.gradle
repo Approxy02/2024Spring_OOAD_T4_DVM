@@ -3,7 +3,7 @@ plugins {
     id 'application'
 }
 
-group = 'org.example'
+group = 'org.DVM'
 version = '1.0-SNAPSHOT'
 
 repositories {
@@ -16,7 +16,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'org.example.Main' // 여기에 실제 메인 클래스의 경로를 작성합니다.
+    mainClass = 'org.DVM.Main' // 여기에 실제 메인 클래스의 경로를 작성합니다.
 }
 
 test {
