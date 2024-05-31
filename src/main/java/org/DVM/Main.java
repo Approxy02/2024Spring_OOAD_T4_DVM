@@ -43,14 +43,17 @@ public class Main {
 //        System.out.println("s : " + s);
 
 
-        UIManager uiManager = new UIManager();
-        new Thread(() -> {
-            uiManager.display("MainUI", null, null, null, null);
-        }).start();
+//        UIManager uiManager = new UIManager();
+//        new Thread(() -> {
+//            uiManager.display("MainUI", null, null, null, null);
+//        }).start();
+//
+//        // Wait for user input
+//        String userInput = uiManager.waitForInput();
+//        System.out.println("User input: " + userInput);
 
-        // Wait for user input
-        String userInput = uiManager.waitForInput();
-        System.out.println("User input: " + userInput);
+        Controller controller = new Controller();
+        controller.start();
 
     }
 }

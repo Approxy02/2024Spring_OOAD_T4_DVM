@@ -4,9 +4,15 @@ import org.DVM.Control.Communication.OtherDVM;
 import org.DVM.Stock.Item;
 
 import javax.swing.*;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.ArrayList;
 
 public class UIManager extends JFrame{
@@ -15,6 +21,9 @@ public class UIManager extends JFrame{
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private String mainDisplayString = null;
+    private Item item = new Item("null", 0, 0, 0);
+    private JLabel categoryValue;
+    private JLabel quantityValue;
 
     public UIManager() {
 //        this.UItype = UItype;
@@ -36,7 +45,6 @@ public class UIManager extends JFrame{
         mainPanel.add(createDispenseResultPanel(), "DispenseResultPanel");
 
         add(mainPanel);
-//        cardLayout.show(mainPanel, "MainPanel");
 
         setVisible(true);
     }
@@ -44,6 +52,7 @@ public class UIManager extends JFrame{
     public void display(String UItype, ArrayList<Item> items, Item item, OtherDVM dvm, String vCode) {
         switch (UItype) {
             case "MainUI":
+                mainUIdisplay(items);
                 break;
             case "PaymentUI-1":
                 payUI_1(item);
@@ -77,8 +86,12 @@ public class UIManager extends JFrame{
         cardLayout.show(mainPanel, "MainPanel");
     }
 
-    private String payUI_1(Item item) {
-        return "";
+    private void payUI_1(Item item) {
+        System.out.println("payUI_1");
+        this.item = item;
+        categoryValue.setText(item.name()+"("+item.code()+")");
+        quantityValue.setText(String.valueOf(item.quantity()));
+        cardLayout.show(mainPanel, "PaymentPanel1");
     }
 
     private void payUI_2(Item item) {
@@ -133,49 +146,50 @@ public class UIManager extends JFrame{
         inputPanel.setLayout(new GridLayout(2, 4, 10, 10));
         inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JButton categoryButton = new JButton("종류");
-        JTextField quantityField = new JTextField("수량(0~99)");
+        JTextField categoryField = new JTextField("");
+        addPlaceholderText(categoryField, "종류(코드입력)");
+        setInputNumericOnly(categoryField);
+
+        JTextField quantityField = new JTextField("");
+        addPlaceholderText(quantityField, "수량(0~99)");
+        setInputNumericOnly(quantityField);
+
+
         JButton purchaseButton = new JButton("구매하기");
-        JButton verificationCodeButton = new JButton("인증코드");
+
+        JTextField verificationCodeField = new JTextField("");
+        addPlaceholderText(verificationCodeField, "인증코드");
+
         JButton prePaymentCodeButton = new JButton("선결제 인증코드");
 
-        inputPanel.add(categoryButton);
+        inputPanel.add(categoryField);
         inputPanel.add(quantityField);
         inputPanel.add(purchaseButton);
-        inputPanel.add(verificationCodeButton);
         inputPanel.add(new JLabel()); // 빈 칸
-        inputPanel.add(new JLabel()); // 빈 칸
-        inputPanel.add(new JLabel()); // 빈 칸
+        inputPanel.add(verificationCodeField);
         inputPanel.add(prePaymentCodeButton);
 
         panel.add(inputPanel, BorderLayout.SOUTH);
 
         // Action Listeners
-        purchaseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Purchase action
-                mainDisplayString = quantityField.getText();
-//                JOptionPane.showMessageDialog(null, "Quantity entered: " + mainDisplayString);
+        purchaseButton.addActionListener(e -> {
+            mainDisplayString = categoryField.getText();
+            mainDisplayString += " " + quantityField.getText();
+            synchronized (UIManager.this) {
+                UIManager.this.notify(); // Notify waiting thread
+            }
+        });
+
+        prePaymentCodeButton.addActionListener(e -> {
+            // Pre-payment code action
+            mainDisplayString = verificationCodeField.getText();
+            if(mainDisplayString.length() != 10){
+                JOptionPane.showMessageDialog(null, "인증코드는 10자리여야 합니다.");
+            }
+            else{
                 synchronized (UIManager.this) {
                     UIManager.this.notify(); // Notify waiting thread
                 }
-            }
-        });
-
-        verificationCodeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Verification code action
-                cardLayout.show(mainPanel, "VerificationCodePanel");
-            }
-        });
-
-        prePaymentCodeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Pre-payment code action
-                cardLayout.show(mainPanel, "PrePaymentPanel1");
             }
         });
 
@@ -197,13 +211,17 @@ public class UIManager extends JFrame{
         itemInfoPanel.setLayout(new GridLayout(2, 2));
         itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
+        System.out.println("item: " + item );
+
         JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
         categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
+        String item_name = item.name()+"("+item.code()+")";
+        System.out.println("item_name: " + item_name);
+        categoryValue = new JLabel("item_name", JLabel.CENTER);
 
         JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
         quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel quantityValue = new JLabel("5", JLabel.CENTER);
+        quantityValue = new JLabel("5", JLabel.CENTER);
 
         itemInfoPanel.add(categoryLabel);
         itemInfoPanel.add(categoryValue);
@@ -219,6 +237,8 @@ public class UIManager extends JFrame{
 
         JLabel cardNumberLabel = new JLabel("카드 번호를 입력해주세요.");
         JTextField cardNumberField = new JTextField("카드번호");
+        setInputNumericOnly(cardNumberField);
+
         JButton paymentButton = new JButton("결제");
 
         paymentPanel.add(cardNumberLabel);
@@ -231,16 +251,20 @@ public class UIManager extends JFrame{
             // Handle payment
             paymentButton.setEnabled(false);
             cardNumberField.setEnabled(false);
-            JOptionPane.showMessageDialog(this, "결제중...");
+//            JOptionPane.showMessageDialog(this, "결제중...");
             // Simulate payment delay
-            Timer timer = new Timer(2000, evt -> {
-                paymentButton.setEnabled(true);
-                cardNumberField.setEnabled(true);
-                JOptionPane.showMessageDialog(this, "결제가 완료되었습니다!");
-                cardLayout.show(mainPanel, "PaymentPanel2");
-            });
-            timer.setRepeats(false);
-            timer.start();
+//            Timer timer = new Timer(2000, evt -> {
+//                paymentButton.setEnabled(true);
+//                cardNumberField.setEnabled(true);
+//                JOptionPane.showMessageDialog(this, "결제가 완료되었습니다!");
+//                cardLayout.show(mainPanel, "PaymentPanel2");
+//            });
+//            timer.setRepeats(false);
+//            timer.start();
+            mainDisplayString = cardNumberField.getText();
+            synchronized (UIManager.this) {
+                UIManager.this.notify(); // Notify waiting thread
+            }
         });
 
         return panel;
@@ -567,13 +591,76 @@ public class UIManager extends JFrame{
         return mainDisplayString;
     }
 
-    public synchronized String waitForInput() {
+    public synchronized String waitForInputString() {
         try {
-            wait(); // Wait for the button action to notify
+            wait();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         return mainDisplayString;
+    }
+
+    public synchronized String waitForInput() {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return mainDisplayString;
+    }
+
+    private void setInputNumericOnly(JTextField textField) {
+        ((AbstractDocument) textField.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string == null) {
+                    return;
+                }
+
+                if (string.matches("\\d+")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text == null) {
+                    return;
+                }
+
+                if (text.matches("\\d+")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+
+            @Override
+            public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
+                super.remove(fb, offset, length);
+            }
+        });
+    }
+
+    private void addPlaceholderText(JTextField textField, String placeholderText) {
+        textField.setForeground(Color.GRAY);
+        textField.setText(placeholderText);
+
+        textField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (textField.getText().equals(placeholderText)) {
+                    textField.setText("");
+                    textField.setForeground(Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (textField.getText().isEmpty()) {
+                    textField.setForeground(Color.GRAY);
+                    textField.setText(placeholderText);
+                }
+            }
+        });
     }
 
 }
