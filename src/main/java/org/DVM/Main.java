@@ -4,6 +4,7 @@ package org.DVM;
 import org.DVM.Control.Controller;
 import org.DVM.Stock.Item;
 import org.DVM.Stock.Stock;
+import org.DVM.UI.UIManager;
 
 public class Main {
     public static void main(String[] args) {
@@ -28,14 +29,28 @@ public class Main {
 //        items[18] = new Item("사이다", 2, 0, 0);
 //        items[19] = new Item("사이다", 2, 0, 0);
 
-        Stock stock = new Stock();
-
-        for(Item item : stock.itemList()){
-            System.out.println(item);
-        }
-
-        Controller controller = new Controller();
+//        Stock stock = new Stock();
+//
+//        for(Item item : stock.itemList()){
+//            System.out.println(item);
+//        }
+//
+//        Controller controller = new Controller();
 //        controller.start();
+
+//        UIManager uiManager = new UIManager();
+//        String s = uiManager.display("MainUI", null, null, null, null);
+//        System.out.println("s : " + s);
+
+
+        UIManager uiManager = new UIManager();
+        new Thread(() -> {
+            uiManager.display("MainUI", null, null, null, null);
+        }).start();
+
+        // Wait for user input
+        String userInput = uiManager.waitForInput();
+        System.out.println("User input: " + userInput);
 
     }
 }
