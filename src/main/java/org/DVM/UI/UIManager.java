@@ -46,7 +46,7 @@ public class UIManager {
 
 
     private void mainUIdisplay(ArrayList<Item> items) {
-        new Example();
+//        new Example();
     }
 
     private String payUI_1(Item item) {
