@@ -15,7 +15,7 @@ public class Stock {
 
     public boolean checkStock(int item_code, int item_num){
         for (Item item : items) {
-            if (item.code() == item_code && (item.quantity() - item.prePayed_amount()) >= item_num) {
+            if (item.code == item_code && (item.quantity - item.prePayed_amount) >= item_num) {
                 return true;
             }
         }
@@ -24,14 +24,24 @@ public class Stock {
 
     public Item getItems(int item_code) {
         for (Item item : items) {
-            if (item.code() == item_code) {
+            if (item.code == item_code) {
                 return item;
             }
         }
         return null;
     }
 
-    public void updateStock(int item_code, int item_num, boolean isPrePayed, String vCode){}
+    public void updateStock(int item_code, int item_num, boolean isPrePayed, String vCode){
+        for (Item item : items) {
+            if (item.code == item_code) {
+                if (isPrePayed) {
+                    item.prePayed_amount += item_num;
+                } else {
+                    item.quantity -= item_num;
+                }
+            }
+        }
+    }
 
     public ArrayList<Item> itemList(){
         return items;

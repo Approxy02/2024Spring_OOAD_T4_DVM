@@ -2,6 +2,7 @@ package org.DVM.UI;
 
 import org.DVM.Control.Communication.OtherDVM;
 import org.DVM.Stock.Item;
+import org.DVM.Stock.Stock;
 
 import javax.swing.*;
 import javax.swing.text.AbstractDocument;
@@ -15,15 +16,23 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
 
-public class UIManager extends JFrame{
+public class UIManager extends JFrame {
     private String UItype;
     private String errorMsg;
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private String mainDisplayString = null;
+    private ArrayList<Item> items = null;
     private Item item = new Item("null", 0, 0, 0);
     private JLabel categoryValue;
     private JLabel quantityValue;
+    private JLabel categoryValue1;
+    private JLabel quantityValue1;
+    private JLabel categoryValue2;
+    private JLabel quantityValue2;
+    private JLabel nameValue;
+    private JLabel locationValue;
+
 
     public UIManager() {
 //        this.UItype = UItype;
@@ -67,7 +76,7 @@ public class UIManager extends JFrame{
                 prepayUI_2(item);
                 break;
             case "LocationInfoUI":
-                locationInfoUI(item);
+                locationInfoUI(item, dvm);
                 break;
             case "VerificationCodeDisplayUI":
                 vCodeUI(item);
@@ -83,18 +92,23 @@ public class UIManager extends JFrame{
 
 
     private void mainUIdisplay(ArrayList<Item> items) {
+        this.items = items;
         cardLayout.show(mainPanel, "MainPanel");
     }
 
     private void payUI_1(Item item) {
         System.out.println("payUI_1");
         this.item = item;
-        categoryValue.setText(item.name()+"("+item.code()+")");
-        quantityValue.setText(String.valueOf(item.quantity()));
+        categoryValue.setText(item.name + "(" + item.code + ")");
+        quantityValue.setText(String.valueOf(item.quantity));
         cardLayout.show(mainPanel, "PaymentPanel1");
     }
 
     private void payUI_2(Item item) {
+        System.out.println("payUI_2");
+        categoryValue1.setText(item.name + "(" + item.code + ")");
+        quantityValue1.setText(String.valueOf(item.quantity));
+        cardLayout.show(mainPanel, "PaymentPanel2");
     }
 
     private String prepayUI_1(Item item) {
@@ -104,13 +118,21 @@ public class UIManager extends JFrame{
     private void prepayUI_2(Item item) {
     }
 
-    private void locationInfoUI(Item item) {
+    private void locationInfoUI(Item item, OtherDVM dvm) {
+        System.out.println("locationInfoUI");
+        nameValue.setText(dvm.name);
+        locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
+        cardLayout.show(mainPanel, "LocationInfoPanel");
     }
 
     private void vCodeUI(Item item) {
     }
 
     private void dispenseUI(Item item) {
+        System.out.println("dispenseUI");
+        categoryValue2.setText(item.name + "(" + item.code + ")");
+        quantityValue2.setText(String.valueOf(item.quantity));
+        cardLayout.show(mainPanel, "DispenseResultPanel");
     }
 
 
@@ -127,15 +149,18 @@ public class UIManager extends JFrame{
         // Item Grid Panel
         JPanel itemGridPanel = new JPanel();
         itemGridPanel.setLayout(new GridLayout(4, 5));
-        String[] itemNames = {
-                "콜라(01)", "사이다(02)", "녹차(03)", "홍차(04)", "밀크티(05)",
-                "탄산수(06)", "보리차(07)", "캔커피(08)", "물(09)", "에너지드링크(10)",
-                "유자차(11)", "식혜(12)", "아이스티(13)", "딸기주스(14)", "오렌지주스(15)",
-                "포도주스(16)", "이온음료(17)", "아메리카노(18)", "핫초코(19)", "카페라떼(20)"
-        };
+        Stock stock = new Stock();
+        ArrayList<Item> items = stock.itemList();
+//        String[] itemNames = {
+//                "콜라(01)", "사이다(02)", "녹차(03)", "홍차(04)", "밀크티(05)",
+//                "탄산수(06)", "보리차(07)", "캔커피(08)", "물(09)", "에너지드링크(10)",
+//                "유자차(11)", "식혜(12)", "아이스티(13)", "딸기주스(14)", "오렌지주스(15)",
+//                "포도주스(16)", "이온음료(17)", "아메리카노(18)", "핫초코(19)", "카페라떼(20)"
+//        };
 
-        for (String itemName : itemNames) {
-            JLabel itemLabel = new JLabel(itemName, JLabel.CENTER);
+        for (Item item : items) {
+            String item_name = item.name + "(" + item.code + ")";
+            JLabel itemLabel = new JLabel(item_name, JLabel.CENTER);
             itemLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
             itemGridPanel.add(itemLabel);
         }
@@ -183,10 +208,9 @@ public class UIManager extends JFrame{
         prePaymentCodeButton.addActionListener(e -> {
             // Pre-payment code action
             mainDisplayString = verificationCodeField.getText();
-            if(mainDisplayString.length() != 10){
+            if (mainDisplayString.length() != 10) {
                 JOptionPane.showMessageDialog(null, "인증코드는 10자리여야 합니다.");
-            }
-            else{
+            } else {
                 synchronized (UIManager.this) {
                     UIManager.this.notify(); // Notify waiting thread
                 }
@@ -211,11 +235,11 @@ public class UIManager extends JFrame{
         itemInfoPanel.setLayout(new GridLayout(2, 2));
         itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        System.out.println("item: " + item );
+        System.out.println("item: " + item);
 
         JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
         categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        String item_name = item.name()+"("+item.code()+")";
+        String item_name = item.name + "(" + item.code + ")";
         System.out.println("item_name: " + item_name);
         categoryValue = new JLabel("item_name", JLabel.CENTER);
 
@@ -249,18 +273,9 @@ public class UIManager extends JFrame{
 
         paymentButton.addActionListener(e -> {
             // Handle payment
-            paymentButton.setEnabled(false);
-            cardNumberField.setEnabled(false);
-//            JOptionPane.showMessageDialog(this, "결제중...");
-            // Simulate payment delay
-//            Timer timer = new Timer(2000, evt -> {
-//                paymentButton.setEnabled(true);
-//                cardNumberField.setEnabled(true);
-//                JOptionPane.showMessageDialog(this, "결제가 완료되었습니다!");
-//                cardLayout.show(mainPanel, "PaymentPanel2");
-//            });
-//            timer.setRepeats(false);
-//            timer.start();
+//            paymentButton.setEnabled(false);
+//            cardNumberField.setEnabled(false);
+
             mainDisplayString = cardNumberField.getText();
             synchronized (UIManager.this) {
                 UIManager.this.notify(); // Notify waiting thread
@@ -287,16 +302,16 @@ public class UIManager extends JFrame{
 
         JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
         categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
+        categoryValue1 = new JLabel("콜라(01)", JLabel.CENTER);
 
         JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
         quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel quantityValue = new JLabel("5", JLabel.CENTER);
+        quantityValue1 = new JLabel("5", JLabel.CENTER);
 
         itemInfoPanel.add(categoryLabel);
-        itemInfoPanel.add(categoryValue);
+        itemInfoPanel.add(categoryValue1);
         itemInfoPanel.add(quantityLabel);
-        itemInfoPanel.add(quantityValue);
+        itemInfoPanel.add(quantityValue1);
 
         panel.add(itemInfoPanel, BorderLayout.CENTER);
 
@@ -313,7 +328,12 @@ public class UIManager extends JFrame{
 
         panel.add(confirmationPanel, BorderLayout.SOUTH);
 
-        receiveButton.addActionListener(e -> cardLayout.show(mainPanel, "MainPanel"));
+        receiveButton.addActionListener(e -> {
+                    synchronized (UIManager.this) {
+                        UIManager.this.notify(); // Notify waiting thread
+                    }
+                }
+        );
 
         return panel;
     }
@@ -510,11 +530,11 @@ public class UIManager extends JFrame{
 
         JLabel nameLabel = new JLabel("DVM 이름", JLabel.CENTER);
         nameLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel nameValue = new JLabel("Team5", JLabel.CENTER);
+        nameValue = new JLabel("Team5", JLabel.CENTER);
 
         JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
         locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel locationValue = new JLabel("(x, y)", JLabel.CENTER);
+        locationValue = new JLabel("(x, y)", JLabel.CENTER);
 
         infoPanel.add(nameLabel);
         infoPanel.add(nameValue);
@@ -555,16 +575,16 @@ public class UIManager extends JFrame{
 
         JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
         categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
+        categoryValue2 = new JLabel("콜라(01)", JLabel.CENTER);
 
         JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
         quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel quantityValue = new JLabel("5", JLabel.CENTER);
+        quantityValue2 = new JLabel("5", JLabel.CENTER);
 
         itemInfoPanel.add(categoryLabel);
-        itemInfoPanel.add(categoryValue);
+        itemInfoPanel.add(categoryValue2);
         itemInfoPanel.add(quantityLabel);
-        itemInfoPanel.add(quantityValue);
+        itemInfoPanel.add(quantityValue2);
 
         panel.add(itemInfoPanel, BorderLayout.CENTER);
 
@@ -581,7 +601,11 @@ public class UIManager extends JFrame{
 
         panel.add(confirmationPanel, BorderLayout.SOUTH);
 
-        completeButton.addActionListener(e -> cardLayout.show(mainPanel, "MainPanel"));
+        completeButton.addActionListener(e -> {
+            synchronized (UIManager.this) {
+                UIManager.this.notify(); // Notify waiting thread
+            }
+        });
 
         return panel;
     }
@@ -600,13 +624,13 @@ public class UIManager extends JFrame{
         return mainDisplayString;
     }
 
-    public synchronized String waitForInput() {
+    public synchronized Item waitForInput() {
         try {
             wait();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return mainDisplayString;
+        return item;
     }
 
     private void setInputNumericOnly(JTextField textField) {
