@@ -191,7 +191,7 @@ public class UIManager extends JFrame {
         for (int i = 0; i < args.length; i++){
             mainDisplayString += args[i];
 
-            if(i <= args.length - 1) mainDisplayString += " ";
+            if(i < args.length - 1) mainDisplayString += " ";
         }
 
         synchronized (this) {
