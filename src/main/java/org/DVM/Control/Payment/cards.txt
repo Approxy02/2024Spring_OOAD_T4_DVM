@@ -2,4 +2,4 @@
 2222 check 40000
 3333 check 40000
 4444 check 40000
-5555 credit 40000
+5555 credit 0

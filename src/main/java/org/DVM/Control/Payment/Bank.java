@@ -18,6 +18,9 @@ public class Bank {
     }
 
     public boolean checkCardAvailabilty(Card card, float totalCost) {
+        System.out.println("Checking card availability");
+        System.out.println(card.cardNum);
+        System.out.println("결제금액 : " + card.balance);
         for (Card c : cards) {
             if (c.cardNum.equals(card.cardNum)) {
                 if (c.balance >= totalCost) {
@@ -50,6 +53,8 @@ public class Bank {
                 Card card = new Card(cardInfo[0], cardInfo[1], Integer.parseInt(cardInfo[2]));
 
                 this.cards.add(card);
+
+                System.out.println(card);
             }
         } catch (Exception e) {
             System.err.println("Error reading card file");

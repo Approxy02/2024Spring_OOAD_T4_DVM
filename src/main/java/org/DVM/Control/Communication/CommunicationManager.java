@@ -2,61 +2,40 @@ package org.DVM.Control.Communication;
 
 import com.google.gson.Gson;
 
-import java.util.HashMap;
+import java.util.function.Consumer;
 
 public class CommunicationManager {
 
     private JsonServer server = new JsonServer(1234);
 
-    public CommunicationManager(){
-        server.callback = (Message message) -> {
-            //processMessage(message)
+    public CommunicationManager() {
 
-            switch(message.msg_type){
-                case req_stock -> {
+    }
 
-                }
-                case resp_stock -> {
-                    //processMessage(message);
-                    //boolean availability = controller.checkStock();
-                    //Message message = createMessage();
-                    //sendMessage(message);
+    public void startServer(Consumer<Message> callback) {
+        server.callback = callback;
 
-                }
-                case req_prepay -> {
-
-                }
-                case resp_prepay -> {
-                    //processMessage(message);
-                    //boolean availability = controller.requestPrepayToDVM(Message);
-                    //Message message = createMessage();
-                    //sendMessage(message);
-                }
-            }
-        };
-
-        new Thread(() -> {
-            server.startServer();
-        }).start();
+        server.startServer();
     }
 
     private String createMessage(Message msg_info) {
-        return null;
+        Gson message = new Gson();
+        String s = message.toJson(msg_info);
+        return s;
+
     }
 
-    private void sendMessage(String message) {
-        JsonClient client = new JsonClient("",1234);
-
-        //client.sendMessage();
+    public void sendMessage(String message) {
+        System.out.println(message);
     }
 
     private Message processMessage(String JSON) {
         return null;
     }
 
-    public boolean requestPrepayToDVM(Message msg_info) {
+    public boolean requesPrepayToDVM(Message msg_info) {
 //        String message = createMessage(msg_info);
-        //sendMessage(msg_info);
+//        sendMessage(message);
         return true;
     }
 
