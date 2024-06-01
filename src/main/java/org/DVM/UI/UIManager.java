@@ -179,11 +179,11 @@ public class UIManager extends JFrame {
 
     private final JPanel showPanel;
 
+    private String mainDisplayString = null;
+
     private void showUI(String name){
         layout.show(showPanel, name);
     }
-
-    private String mainDisplayString = null;
 
     private void process(String... args) {
         mainDisplayString = "";
@@ -263,28 +263,32 @@ public class UIManager extends JFrame {
     private Item item = new Item("null", 0, 0, 0);
 
     private class UIMain extends UIPanel {
-        private ArrayList<Item> items = null;
+        private final JPanel itemGridPanel = new JPanel();
 
         @Override
         protected void processItems(ArrayList<Item> items) {
-            this.items = items;
+            itemGridPanel.removeAll();
+
+            Stock stock = new Stock();
+            //실제 Stock이 들어오면 여기를 지워주세요
+            items = stock.itemList();
+
+            for (Item item : items) {
+                JLabel itemLabel = new JLabel(String.format("%s(%02d)", item.name, item.code), JLabel.CENTER);
+
+                itemLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+                itemGridPanel.add(itemLabel);
+            }
+
+            itemGridPanel.revalidate();
+            itemGridPanel.repaint();
         }
 
         public UIMain(){
             super();
 
-            // Item Grid Panel
-            JPanel itemGridPanel = new JPanel();
             itemGridPanel.setLayout(new GridLayout(4, 5));
-            Stock stock = new Stock();
-            ArrayList<Item> items = stock.itemList();
-
-            for (Item item : items) {
-                String item_name = String.format("%s(%02d)", item.name, item.code);
-                JLabel itemLabel = new JLabel(item_name, JLabel.CENTER);
-                itemLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-                itemGridPanel.add(itemLabel);
-            }
 
             this.add(itemGridPanel, BorderLayout.CENTER);
 
@@ -294,7 +298,6 @@ public class UIManager extends JFrame {
             inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
             UITextField categoryField = new UITextField("", "종류(코드입력)");
-
             categoryField.setNumericOnly();
 
             UITextField quantityField = new UITextField("", "수량(0~99)");
