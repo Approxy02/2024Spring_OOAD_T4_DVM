@@ -52,9 +52,12 @@ public class UIManager extends JFrame {
 
     private class UITextField extends JTextField {
         private final Document document = super.getDocument();
+
         private final Document placeHolderDocument = new PlainDocument();
 
         private String placeHolder;
+
+        private int maxLength = -1;
 
         @Override
         public String getText() {
@@ -92,6 +95,10 @@ public class UIManager extends JFrame {
             }
         }
 
+        public int getMaxLength() { return this.maxLength; }
+
+        public void setMaxLength(int maxLength) { this.maxLength = maxLength; }
+
         private void showPlaceHolder() {
             super.setDocument(this.placeHolderDocument);
 
@@ -114,6 +121,8 @@ public class UIManager extends JFrame {
 
         public UITextField(String text, String placeHolder) {
             setText(text); setPlaceHolder(placeHolder);
+
+            this.setRegexFilter(".*");
 
             if(this.document.getLength() == 0) {
                 this.showPlaceHolder();
@@ -138,24 +147,15 @@ public class UIManager extends JFrame {
         public void setRegexFilter(String regex) {
             ((AbstractDocument)this.document).setDocumentFilter(new DocumentFilter() {
                 @Override
-                public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                public void replace(FilterBypass fb, int offset, int length, String string, AttributeSet attrs) throws BadLocationException {
                     if (string == null) {
                         return;
                     }
 
-                    if (string.matches(regex)) {
-                        super.insertString(fb, offset, string, attr);
-                    }
-                }
-
-                @Override
-                public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-                    if (text == null) {
-                        return;
-                    }
-
-                    if (text.matches(regex)) {
-                        super.replace(fb, offset, length, text, attrs);
+                    if(document.getLength() + string.length() - length <= getMaxLength() || getMaxLength() < 0) {
+                        if (string.matches(regex)) {
+                            super.replace(fb, offset, length, string, attrs);
+                        }
                     }
                 }
 
@@ -298,14 +298,17 @@ public class UIManager extends JFrame {
             inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
             UITextField categoryField = new UITextField("", "종류(코드입력)");
+            categoryField.setMaxLength(2);
             categoryField.setNumericOnly();
 
             UITextField quantityField = new UITextField("", "수량(0~99)");
+            quantityField.setMaxLength(2);
             quantityField.setNumericOnly();
 
             JButton purchaseButton = new JButton("구매하기");
 
             UITextField verificationCodeField = new UITextField("", "인증코드");
+            verificationCodeField.setMaxLength(10);
 
             JButton prePaymentCodeButton = new JButton("선결제 인증코드");
 
