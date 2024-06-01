@@ -1,6 +1,7 @@
 package org.DVM.UI;
 
 import org.DVM.Control.Communication.OtherDVM;
+import org.DVM.Main;
 import org.DVM.Stock.Item;
 import org.DVM.Stock.Stock;
 
@@ -15,6 +16,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.Console;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class UIManager extends JFrame {
     String title = "Distributed Vending Machine";
@@ -159,7 +161,7 @@ public class UIManager extends JFrame {
 
     //endregion
 
-    private final CardLayout layout;
+    private final CardLayout layout = new CardLayout();
 
     private final JPanel showPanel;
 
@@ -167,25 +169,42 @@ public class UIManager extends JFrame {
         layout.show(showPanel, name);
     }
 
+    private void process(String... args) {
+        mainDisplayString = "";
+
+        for (int i = 0; i < args.length; i++){
+            mainDisplayString += args[i];
+
+            if(i <= args.length - 1) mainDisplayString += " ";
+        }
+
+        synchronized (this) {
+            this.notify(); // Notify waiting thread
+        }
+    }
+
+    HashMap<String, UIPanel> UIPanels = new HashMap<String, UIPanel>();
+
     public UIManager() {
         setTitle(title);
         setLocationRelativeTo(null);
         setSize(600, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        layout = new CardLayout();
-
         showPanel = new JPanel(layout);
 
-        // Add all panels
-        showPanel.add(createMainPanel(), "MainPanel");
-        showPanel.add(createPaymentPanel1(), "PaymentPanel1");
-        showPanel.add(createPaymentPanel2(), "PaymentPanel2");
-        showPanel.add(createPrePaymentPanel1(), "PrePaymentPanel1");
-        showPanel.add(createPrePaymentPanel2(), "PrePaymentPanel2");
-        showPanel.add(createVerificationCodePanel(), "VerificationCodePanel");
-        showPanel.add(createLocationInfoPanel(), "LocationInfoPanel");
-        showPanel.add(createDispenseResultPanel(), "DispenseResultPanel");
+        UIPanels.put("MainUI", new UIMain());
+        UIPanels.put("PaymentUI_1", new UIPayment1());
+        UIPanels.put("PaymentUI_2", new UIPayment2());
+        UIPanels.put("PrepaymentUI_1", new UIPrePayment1());
+        UIPanels.put("PrepaymentUI_2", new UIPrePayment2());
+        UIPanels.put("LocationInfoUI", new UILocationInfo());
+        UIPanels.put("VerificationCodeUI", new UIVerificationCode());
+        UIPanels.put("DispenseResultUI", new UIDispenseResult());
+
+        for (var entry : UIPanels.entrySet()){
+            showPanel.add(entry.getValue(), entry.getKey());
+        }
 
         add(showPanel);
 
@@ -197,16 +216,16 @@ public class UIManager extends JFrame {
             case "MainUI":
                 mainUIdisplay(items);
                 break;
-            case "PaymentUI-1":
+            case "PaymentUI_1":
                 payUI_1(item);
                 break;
-            case "PaymentUI-2":
+            case "PaymentUI_2":
                 payUI_2(item);
                 break;
-            case "PrepaymentUI-1":
+            case "PrepaymentUI_1":
                 prepayUI_1(item);
                 break;
-            case "PrepaymentUI-2":
+            case "PrepaymentUI_2":
                 prepayUI_2(item);
                 break;
             case "LocationInfoUI":
@@ -236,7 +255,7 @@ public class UIManager extends JFrame {
     private JLabel locationValue;
     private void mainUIdisplay(ArrayList<Item> items) {
         this.items = items;
-        showUI("MainPanel");
+        showUI("MainUI");
     }
 
     private void payUI_1(Item item) {
@@ -244,14 +263,14 @@ public class UIManager extends JFrame {
         this.item = item;
         categoryValue.setText(item.name + "(" + item.code + ")");
         quantityValue.setText(String.valueOf(item.quantity));
-        showUI("PaymentPanel1");
+        showUI("PaymentUI_1");
     }
 
     private void payUI_2(Item item) {
         System.out.println("payUI_2");
         categoryValue1.setText(item.name + "(" + item.code + ")");
         quantityValue1.setText(String.valueOf(item.quantity));
-        showUI("PaymentPanel2");
+        showUI("PaymentUI_2");
     }
 
     private String prepayUI_1(Item item) {
@@ -265,7 +284,7 @@ public class UIManager extends JFrame {
         System.out.println("locationInfoUI");
         nameValue.setText(dvm.name);
         locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
-        showUI("LocationInfoPanel");
+        showUI("LocationInfoUI");
     }
 
     private void vCodeUI(Item item) {
@@ -275,430 +294,387 @@ public class UIManager extends JFrame {
         System.out.println("dispenseUI");
         categoryValue2.setText(item.name + "(" + item.code + ")");
         quantityValue2.setText(String.valueOf(item.quantity));
-        showUI("DispenseResultPanel");
+        showUI("DispenseResultUI");
     }
 
+    private class UIMain extends UIPanel {
+        public UIMain(){
+            super();
 
-    private JPanel createMainPanel() {
-        UIPanel panel = new UIPanel();
+            // Item Grid Panel
+            JPanel itemGridPanel = new JPanel();
+            itemGridPanel.setLayout(new GridLayout(4, 5));
+            Stock stock = new Stock();
+            ArrayList<Item> items = stock.itemList();
 
-        // Item Grid Panel
-        JPanel itemGridPanel = new JPanel();
-        itemGridPanel.setLayout(new GridLayout(4, 5));
-        Stock stock = new Stock();
-        ArrayList<Item> items = stock.itemList();
-//        String[] itemNames = {
-//                "콜라(01)", "사이다(02)", "녹차(03)", "홍차(04)", "밀크티(05)",
-//                "탄산수(06)", "보리차(07)", "캔커피(08)", "물(09)", "에너지드링크(10)",
-//                "유자차(11)", "식혜(12)", "아이스티(13)", "딸기주스(14)", "오렌지주스(15)",
-//                "포도주스(16)", "이온음료(17)", "아메리카노(18)", "핫초코(19)", "카페라떼(20)"
-//        };
-
-        for (Item item : items) {
-            String item_name = item.name + "(" + item.code + ")";
-            JLabel itemLabel = new JLabel(item_name, JLabel.CENTER);
-            itemLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            itemGridPanel.add(itemLabel);
-        }
-        panel.add(itemGridPanel, BorderLayout.CENTER);
-
-        // Input Panel
-        JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new GridLayout(2, 4, 10, 10));
-        inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        UITextField categoryField = new UITextField("", "종류(코드입력)");
-
-        categoryField.setNumericOnly();
-
-        UITextField quantityField = new UITextField("", "수량(0~99)");
-        quantityField.setNumericOnly();
-
-
-        JButton purchaseButton = new JButton("구매하기");
-
-        UITextField verificationCodeField = new UITextField("", "인증코드");
-
-        JButton prePaymentCodeButton = new JButton("선결제 인증코드");
-
-        inputPanel.add(categoryField);
-        inputPanel.add(quantityField);
-        inputPanel.add(purchaseButton);
-        inputPanel.add(new JLabel()); // 빈 칸
-        inputPanel.add(verificationCodeField);
-        inputPanel.add(prePaymentCodeButton);
-
-        panel.add(inputPanel, BorderLayout.SOUTH);
-
-        // Action Listeners
-        purchaseButton.addActionListener(e -> {
-            mainDisplayString = categoryField.getText();
-            mainDisplayString += " " + quantityField.getText();
-            synchronized (UIManager.this) {
-                UIManager.this.notify(); // Notify waiting thread
+            for (Item item : items) {
+                String item_name = String.format("%s(%02d)", item.name, item.code);
+                JLabel itemLabel = new JLabel(item_name, JLabel.CENTER);
+                itemLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                itemGridPanel.add(itemLabel);
             }
-        });
 
-        prePaymentCodeButton.addActionListener(e -> {
-            // Pre-payment code action
-            mainDisplayString = verificationCodeField.getText();
-            if (mainDisplayString.length() != 10) {
-                JOptionPane.showMessageDialog(null, "인증코드는 10자리여야 합니다.");
-            } else {
+            this.add(itemGridPanel, BorderLayout.CENTER);
+
+            // Input Panel
+            JPanel inputPanel = new JPanel();
+            inputPanel.setLayout(new GridLayout(2, 4, 10, 10));
+            inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            UITextField categoryField = new UITextField("", "종류(코드입력)");
+
+            categoryField.setNumericOnly();
+
+            UITextField quantityField = new UITextField("", "수량(0~99)");
+            quantityField.setNumericOnly();
+
+            JButton purchaseButton = new JButton("구매하기");
+
+            UITextField verificationCodeField = new UITextField("", "인증코드");
+
+            JButton prePaymentCodeButton = new JButton("선결제 인증코드");
+
+            inputPanel.add(categoryField);
+            inputPanel.add(quantityField);
+            inputPanel.add(purchaseButton);
+            inputPanel.add(new JLabel()); // 빈 칸
+            inputPanel.add(verificationCodeField);
+            inputPanel.add(prePaymentCodeButton);
+
+            this.add(inputPanel, BorderLayout.SOUTH);
+
+            // Action Listeners
+            purchaseButton.addActionListener(e -> {
+                process(categoryField.getText(), quantityField.getText());
+            });
+
+            prePaymentCodeButton.addActionListener(e -> {
+                // Pre-payment code action
+                if (verificationCodeField.getText().length() != 10) {
+                    JOptionPane.showMessageDialog(null, "인증코드는 10자리여야 합니다.");
+
+                    return;
+                }
+
+                process(verificationCodeField.getText());
+            });
+        }
+    }
+
+    private class UIPayment1 extends UIPanel {
+        public UIPayment1() {
+            // Item Info Panel
+            JPanel itemInfoPanel = new JPanel();
+            itemInfoPanel.setLayout(new GridLayout(2, 2));
+            itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            System.out.println("item: " + item);
+
+            JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
+            categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            String item_name = item.name + "(" + item.code + ")";
+            System.out.println("item_name: " + item_name);
+            categoryValue = new JLabel("item_name", JLabel.CENTER);
+
+            JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
+            quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            quantityValue = new JLabel("5", JLabel.CENTER);
+
+            itemInfoPanel.add(categoryLabel);
+            itemInfoPanel.add(categoryValue);
+            itemInfoPanel.add(quantityLabel);
+            itemInfoPanel.add(quantityValue);
+
+            this.add(itemInfoPanel, BorderLayout.CENTER);
+
+            // Payment Panel
+            JPanel paymentPanel = new JPanel();
+            paymentPanel.setLayout(new GridLayout(3, 1, 10, 10));
+            paymentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JLabel cardNumberLabel = new JLabel("카드 번호를 입력해주세요.");
+            UITextField cardNumberField = new UITextField("", "카드번호");
+            cardNumberField.setNumericOnly();
+
+            JButton paymentButton = new JButton("결제");
+
+            paymentPanel.add(cardNumberLabel);
+            paymentPanel.add(cardNumberField);
+            paymentPanel.add(paymentButton);
+
+            this.add(paymentPanel, BorderLayout.SOUTH);
+
+            paymentButton.addActionListener(e -> {
+                process(cardNumberField.getText());
+            });
+        }
+    }
+
+    private class UIPayment2 extends UIPanel {
+        public UIPayment2() {
+            // Item Info Panel
+            JPanel itemInfoPanel = new JPanel();
+            itemInfoPanel.setLayout(new GridLayout(2, 2));
+            itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
+            categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            categoryValue1 = new JLabel("콜라(01)", JLabel.CENTER);
+
+            JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
+            quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            quantityValue1 = new JLabel("5", JLabel.CENTER);
+
+            itemInfoPanel.add(categoryLabel);
+            itemInfoPanel.add(categoryValue1);
+            itemInfoPanel.add(quantityLabel);
+            itemInfoPanel.add(quantityValue1);
+
+            this.add(itemInfoPanel, BorderLayout.CENTER);
+
+            // Confirmation Panel
+            JPanel confirmationPanel = new JPanel();
+            confirmationPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            confirmationPanel.setLayout(new GridLayout(2, 1, 10, 10));
+
+            JLabel confirmationLabel = new JLabel("결제가 완료되었습니다!", JLabel.CENTER);
+            JButton receiveButton = new JButton("음료 받기");
+
+            confirmationPanel.add(confirmationLabel);
+            confirmationPanel.add(receiveButton);
+
+            this.add(confirmationPanel, BorderLayout.SOUTH);
+
+            receiveButton.addActionListener(e -> {
+                process();
+            });
+        }
+    }
+    private class UIPrePayment1 extends UIPanel {
+        public UIPrePayment1() {
+            // Item Info Panel
+            JPanel itemInfoPanel = new JPanel();
+            itemInfoPanel.setLayout(new GridLayout(3, 2));
+            itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
+            categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            JLabel categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
+
+            JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
+            quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            JLabel quantityValue = new JLabel("5", JLabel.CENTER);
+
+            JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
+            locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            JLabel locationValue = new JLabel("(5, 5)", JLabel.CENTER);
+
+            itemInfoPanel.add(categoryLabel);
+            itemInfoPanel.add(categoryValue);
+            itemInfoPanel.add(quantityLabel);
+            itemInfoPanel.add(quantityValue);
+            itemInfoPanel.add(locationLabel);
+            itemInfoPanel.add(locationValue);
+
+            this.add(itemInfoPanel, BorderLayout.CENTER);
+
+            // Payment Panel
+            JPanel paymentPanel = new JPanel();
+            paymentPanel.setLayout(new GridLayout(3, 1, 10, 10));
+            paymentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JLabel cardNumberLabel = new JLabel("카드 번호를 입력해주세요.");
+            UITextField cardNumberField = new UITextField("", "카드번호");
+            JButton paymentButton = new JButton("결제");
+
+            paymentPanel.add(cardNumberLabel);
+            paymentPanel.add(cardNumberField);
+            paymentPanel.add(paymentButton);
+
+            this.add(paymentPanel, BorderLayout.SOUTH);
+
+            paymentButton.addActionListener(e -> {
+                // Handle payment
+                paymentButton.setEnabled(false);
+                cardNumberField.setEnabled(false);
+                JOptionPane.showMessageDialog(this, "결제중...");
+                // Simulate payment delay
+                Timer timer = new Timer(2000, evt -> {
+                    paymentButton.setEnabled(true);
+                    cardNumberField.setEnabled(true);
+                    JOptionPane.showMessageDialog(this, "결제가 완료되었습니다!");
+                    showUI("PrepaymentUI_2");
+                });
+                timer.setRepeats(false);
+                timer.start();
+            });
+        }
+    }
+
+    private class UIPrePayment2 extends UIPanel {
+        public UIPrePayment2() {
+            // Item Info Panel
+            JPanel itemInfoPanel = new JPanel();
+            itemInfoPanel.setLayout(new GridLayout(3, 2));
+            itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
+            categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            JLabel categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
+
+            JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
+            quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            JLabel quantityValue = new JLabel("5", JLabel.CENTER);
+
+            JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
+            locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            JLabel locationValue = new JLabel("(5, 5)", JLabel.CENTER);
+
+            itemInfoPanel.add(categoryLabel);
+            itemInfoPanel.add(categoryValue);
+            itemInfoPanel.add(quantityLabel);
+            itemInfoPanel.add(quantityValue);
+            itemInfoPanel.add(locationLabel);
+            itemInfoPanel.add(locationValue);
+
+            this.add(itemInfoPanel, BorderLayout.CENTER);
+
+            // Confirmation Panel
+            JPanel confirmationPanel = new JPanel();
+            confirmationPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            confirmationPanel.setLayout(new GridLayout(2, 1, 10, 10));
+
+            JLabel confirmationLabel = new JLabel("결제가 완료되었습니다!", JLabel.CENTER);
+            JButton receiveCodeButton = new JButton("인증 코드 받기");
+
+            confirmationPanel.add(confirmationLabel);
+            confirmationPanel.add(receiveCodeButton);
+
+            this.add(confirmationPanel, BorderLayout.SOUTH);
+
+            receiveCodeButton.addActionListener(e -> showUI("MainUI"));
+        }
+    }
+
+    private class UIVerificationCode extends UIPanel {
+        public UIVerificationCode() {
+            // Info Panel
+            JPanel infoPanel = new JPanel();
+            infoPanel.setLayout(new GridLayout(3, 2));
+            infoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JLabel nameLabel = new JLabel("DVM 이름", JLabel.CENTER);
+            nameLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            JLabel nameValue = new JLabel("Team5", JLabel.CENTER);
+
+            JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
+            locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            JLabel locationValue = new JLabel("(x, y)", JLabel.CENTER);
+
+            JLabel codeLabel = new JLabel("인증코드", JLabel.CENTER);
+            codeLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            JLabel codeValue = new JLabel("AD13254D33", JLabel.CENTER);
+
+            infoPanel.add(nameLabel);
+            infoPanel.add(nameValue);
+            infoPanel.add(locationLabel);
+            infoPanel.add(locationValue);
+            infoPanel.add(codeLabel);
+            infoPanel.add(codeValue);
+
+            this.add(infoPanel, BorderLayout.CENTER);
+
+            // Button Panel
+            JPanel buttonPanel = new JPanel();
+            buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            buttonPanel.setLayout(new GridLayout(1, 1, 10, 10));
+
+            JButton backButton = new JButton("돌아가기");
+            buttonPanel.add(backButton);
+
+            this.add(buttonPanel, BorderLayout.SOUTH);
+
+            backButton.addActionListener(e -> showUI("MainUI"));
+        }
+    }
+
+    private class UILocationInfo extends UIPanel {
+        public UILocationInfo() {
+            // Info Panel
+            JPanel infoPanel = new JPanel();
+            infoPanel.setLayout(new GridLayout(2, 2));
+            infoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JLabel nameLabel = new JLabel("DVM 이름", JLabel.CENTER);
+            nameLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            nameValue = new JLabel("Team5", JLabel.CENTER);
+
+            JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
+            locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            locationValue = new JLabel("(x, y)", JLabel.CENTER);
+
+            infoPanel.add(nameLabel);
+            infoPanel.add(nameValue);
+            infoPanel.add(locationLabel);
+            infoPanel.add(locationValue);
+
+            this.add(infoPanel, BorderLayout.CENTER);
+
+            // Button Panel
+            JPanel buttonPanel = new JPanel();
+            buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            buttonPanel.setLayout(new GridLayout(1, 1, 10, 10));
+
+            JButton nextButton = new JButton("다음");
+            buttonPanel.add(nextButton);
+
+            this.add(buttonPanel, BorderLayout.SOUTH);
+
+            nextButton.addActionListener(e -> showUI("MainUI"));
+        }
+    }
+
+    private class UIDispenseResult extends UIPanel {
+        public UIDispenseResult() {
+            // Item Info Panel
+            JPanel itemInfoPanel = new JPanel();
+            itemInfoPanel.setLayout(new GridLayout(2, 2));
+            itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
+            categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            categoryValue2 = new JLabel("콜라(01)", JLabel.CENTER);
+
+            JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
+            quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            quantityValue2 = new JLabel("5", JLabel.CENTER);
+
+            itemInfoPanel.add(categoryLabel);
+            itemInfoPanel.add(categoryValue2);
+            itemInfoPanel.add(quantityLabel);
+            itemInfoPanel.add(quantityValue2);
+
+            this.add(itemInfoPanel, BorderLayout.CENTER);
+
+            // Confirmation Panel
+            JPanel confirmationPanel = new JPanel();
+            confirmationPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            confirmationPanel.setLayout(new GridLayout(2, 1, 10, 10));
+
+            JLabel confirmationLabel = new JLabel("음료를 수령하세요!", JLabel.CENTER);
+            JButton completeButton = new JButton("완료");
+
+            confirmationPanel.add(confirmationLabel);
+            confirmationPanel.add(completeButton);
+
+            this.add(confirmationPanel, BorderLayout.SOUTH);
+
+            completeButton.addActionListener(e -> {
                 synchronized (UIManager.this) {
                     UIManager.this.notify(); // Notify waiting thread
                 }
-            }
-        });
-
-        return panel;
-    }
-
-    private JPanel createPaymentPanel1() {
-        UIPanel panel = new UIPanel();
-
-        // Item Info Panel
-        JPanel itemInfoPanel = new JPanel();
-        itemInfoPanel.setLayout(new GridLayout(2, 2));
-        itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        System.out.println("item: " + item);
-
-        JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
-        categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        String item_name = item.name + "(" + item.code + ")";
-        System.out.println("item_name: " + item_name);
-        categoryValue = new JLabel("item_name", JLabel.CENTER);
-
-        JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
-        quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        quantityValue = new JLabel("5", JLabel.CENTER);
-
-        itemInfoPanel.add(categoryLabel);
-        itemInfoPanel.add(categoryValue);
-        itemInfoPanel.add(quantityLabel);
-        itemInfoPanel.add(quantityValue);
-
-        panel.add(itemInfoPanel, BorderLayout.CENTER);
-
-        // Payment Panel
-        JPanel paymentPanel = new JPanel();
-        paymentPanel.setLayout(new GridLayout(3, 1, 10, 10));
-        paymentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel cardNumberLabel = new JLabel("카드 번호를 입력해주세요.");
-        UITextField cardNumberField = new UITextField("", "카드번호");
-        cardNumberField.setNumericOnly();
-
-        JButton paymentButton = new JButton("결제");
-
-        paymentPanel.add(cardNumberLabel);
-        paymentPanel.add(cardNumberField);
-        paymentPanel.add(paymentButton);
-
-        panel.add(paymentPanel, BorderLayout.SOUTH);
-
-        paymentButton.addActionListener(e -> {
-            // Handle payment
-//            paymentButton.setEnabled(false);
-//            cardNumberField.setEnabled(false);
-
-            mainDisplayString = cardNumberField.getText();
-            synchronized (UIManager.this) {
-                UIManager.this.notify(); // Notify waiting thread
-            }
-        });
-
-        return panel;
-    }
-
-    private JPanel createPaymentPanel2() {
-        UIPanel panel = new UIPanel();
-
-        // Item Info Panel
-        JPanel itemInfoPanel = new JPanel();
-        itemInfoPanel.setLayout(new GridLayout(2, 2));
-        itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
-        categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        categoryValue1 = new JLabel("콜라(01)", JLabel.CENTER);
-
-        JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
-        quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        quantityValue1 = new JLabel("5", JLabel.CENTER);
-
-        itemInfoPanel.add(categoryLabel);
-        itemInfoPanel.add(categoryValue1);
-        itemInfoPanel.add(quantityLabel);
-        itemInfoPanel.add(quantityValue1);
-
-        panel.add(itemInfoPanel, BorderLayout.CENTER);
-
-        // Confirmation Panel
-        JPanel confirmationPanel = new JPanel();
-        confirmationPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        confirmationPanel.setLayout(new GridLayout(2, 1, 10, 10));
-
-        JLabel confirmationLabel = new JLabel("결제가 완료되었습니다!", JLabel.CENTER);
-        JButton receiveButton = new JButton("음료 받기");
-
-        confirmationPanel.add(confirmationLabel);
-        confirmationPanel.add(receiveButton);
-
-        panel.add(confirmationPanel, BorderLayout.SOUTH);
-
-        receiveButton.addActionListener(e -> {
-                    synchronized (UIManager.this) {
-                        UIManager.this.notify(); // Notify waiting thread
-                    }
-                }
-        );
-
-        return panel;
-    }
-
-    private JPanel createPrePaymentPanel1() {
-        UIPanel panel = new UIPanel();
-
-        // Item Info Panel
-        JPanel itemInfoPanel = new JPanel();
-        itemInfoPanel.setLayout(new GridLayout(3, 2));
-        itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
-        categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
-
-        JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
-        quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel quantityValue = new JLabel("5", JLabel.CENTER);
-
-        JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
-        locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel locationValue = new JLabel("(5, 5)", JLabel.CENTER);
-
-        itemInfoPanel.add(categoryLabel);
-        itemInfoPanel.add(categoryValue);
-        itemInfoPanel.add(quantityLabel);
-        itemInfoPanel.add(quantityValue);
-        itemInfoPanel.add(locationLabel);
-        itemInfoPanel.add(locationValue);
-
-        panel.add(itemInfoPanel, BorderLayout.CENTER);
-
-        // Payment Panel
-        JPanel paymentPanel = new JPanel();
-        paymentPanel.setLayout(new GridLayout(3, 1, 10, 10));
-        paymentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel cardNumberLabel = new JLabel("카드 번호를 입력해주세요.");
-        UITextField cardNumberField = new UITextField("", "카드번호");
-        JButton paymentButton = new JButton("결제");
-
-        paymentPanel.add(cardNumberLabel);
-        paymentPanel.add(cardNumberField);
-        paymentPanel.add(paymentButton);
-
-        panel.add(paymentPanel, BorderLayout.SOUTH);
-
-        paymentButton.addActionListener(e -> {
-            // Handle payment
-            paymentButton.setEnabled(false);
-            cardNumberField.setEnabled(false);
-            JOptionPane.showMessageDialog(this, "결제중...");
-            // Simulate payment delay
-            Timer timer = new Timer(2000, evt -> {
-                paymentButton.setEnabled(true);
-                cardNumberField.setEnabled(true);
-                JOptionPane.showMessageDialog(this, "결제가 완료되었습니다!");
-                showUI("PrePaymentPanel2");
             });
-            timer.setRepeats(false);
-            timer.start();
-        });
-
-        return panel;
-    }
-
-    private JPanel createPrePaymentPanel2() {
-        UIPanel panel = new UIPanel();
-
-        // Item Info Panel
-        JPanel itemInfoPanel = new JPanel();
-        itemInfoPanel.setLayout(new GridLayout(3, 2));
-        itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
-        categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
-
-        JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
-        quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel quantityValue = new JLabel("5", JLabel.CENTER);
-
-        JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
-        locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel locationValue = new JLabel("(5, 5)", JLabel.CENTER);
-
-        itemInfoPanel.add(categoryLabel);
-        itemInfoPanel.add(categoryValue);
-        itemInfoPanel.add(quantityLabel);
-        itemInfoPanel.add(quantityValue);
-        itemInfoPanel.add(locationLabel);
-        itemInfoPanel.add(locationValue);
-
-        panel.add(itemInfoPanel, BorderLayout.CENTER);
-
-        // Confirmation Panel
-        JPanel confirmationPanel = new JPanel();
-        confirmationPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        confirmationPanel.setLayout(new GridLayout(2, 1, 10, 10));
-
-        JLabel confirmationLabel = new JLabel("결제가 완료되었습니다!", JLabel.CENTER);
-        JButton receiveCodeButton = new JButton("인증 코드 받기");
-
-        confirmationPanel.add(confirmationLabel);
-        confirmationPanel.add(receiveCodeButton);
-
-        panel.add(confirmationPanel, BorderLayout.SOUTH);
-
-        receiveCodeButton.addActionListener(e -> showUI("MainPanel"));
-
-        return panel;
-    }
-
-    private JPanel createVerificationCodePanel() {
-        UIPanel panel = new UIPanel();
-
-        // Info Panel
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new GridLayout(3, 2));
-        infoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel nameLabel = new JLabel("DVM 이름", JLabel.CENTER);
-        nameLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel nameValue = new JLabel("Team5", JLabel.CENTER);
-
-        JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
-        locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel locationValue = new JLabel("(x, y)", JLabel.CENTER);
-
-        JLabel codeLabel = new JLabel("인증코드", JLabel.CENTER);
-        codeLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel codeValue = new JLabel("AD13254D33", JLabel.CENTER);
-
-        infoPanel.add(nameLabel);
-        infoPanel.add(nameValue);
-        infoPanel.add(locationLabel);
-        infoPanel.add(locationValue);
-        infoPanel.add(codeLabel);
-        infoPanel.add(codeValue);
-
-        panel.add(infoPanel, BorderLayout.CENTER);
-
-        // Button Panel
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        buttonPanel.setLayout(new GridLayout(1, 1, 10, 10));
-
-        JButton backButton = new JButton("돌아가기");
-        buttonPanel.add(backButton);
-
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        backButton.addActionListener(e -> showUI("MainPanel"));
-
-        return panel;
-    }
-
-    private JPanel createLocationInfoPanel() {
-        UIPanel panel = new UIPanel();
-
-        // Info Panel
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new GridLayout(2, 2));
-        infoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel nameLabel = new JLabel("DVM 이름", JLabel.CENTER);
-        nameLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        nameValue = new JLabel("Team5", JLabel.CENTER);
-
-        JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
-        locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        locationValue = new JLabel("(x, y)", JLabel.CENTER);
-
-        infoPanel.add(nameLabel);
-        infoPanel.add(nameValue);
-        infoPanel.add(locationLabel);
-        infoPanel.add(locationValue);
-
-        panel.add(infoPanel, BorderLayout.CENTER);
-
-        // Button Panel
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        buttonPanel.setLayout(new GridLayout(1, 1, 10, 10));
-
-        JButton nextButton = new JButton("다음");
-        buttonPanel.add(nextButton);
-
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        nextButton.addActionListener(e -> showUI("MainPanel"));
-
-        return panel;
-    }
-
-    private JPanel createDispenseResultPanel() {
-        UIPanel panel = new UIPanel();
-
-        // Item Info Panel
-        JPanel itemInfoPanel = new JPanel();
-        itemInfoPanel.setLayout(new GridLayout(2, 2));
-        itemInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
-        categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        categoryValue2 = new JLabel("콜라(01)", JLabel.CENTER);
-
-        JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
-        quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        quantityValue2 = new JLabel("5", JLabel.CENTER);
-
-        itemInfoPanel.add(categoryLabel);
-        itemInfoPanel.add(categoryValue2);
-        itemInfoPanel.add(quantityLabel);
-        itemInfoPanel.add(quantityValue2);
-
-        panel.add(itemInfoPanel, BorderLayout.CENTER);
-
-        // Confirmation Panel
-        JPanel confirmationPanel = new JPanel();
-        confirmationPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        confirmationPanel.setLayout(new GridLayout(2, 1, 10, 10));
-
-        JLabel confirmationLabel = new JLabel("음료를 수령하세요!", JLabel.CENTER);
-        JButton completeButton = new JButton("완료");
-
-        confirmationPanel.add(confirmationLabel);
-        confirmationPanel.add(completeButton);
-
-        panel.add(confirmationPanel, BorderLayout.SOUTH);
-
-        completeButton.addActionListener(e -> {
-            synchronized (UIManager.this) {
-                UIManager.this.notify(); // Notify waiting thread
-            }
-        });
-
-        return panel;
-    }
-
-    public synchronized String returnString(String s) {
-        mainDisplayString = s;
-
-        return mainDisplayString;
+        }
     }
 
     public synchronized String waitForInputString() {

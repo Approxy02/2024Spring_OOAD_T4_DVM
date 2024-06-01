@@ -67,7 +67,7 @@ public class Controller {
             Item item = new Item(stock.getItems(item_code).name, item_code, item_num, 0);
             this.item = item;
             System.out.println(item);
-            uiManager.display("PaymentUI-1", stock.itemList(), item, null, null);
+            uiManager.display("PaymentUI_1", stock.itemList(), item, null, null);
             String cardInfo = uiManager.waitForInputString();
             System.out.println("Card Info : " + cardInfo);
             Card card = new Card(cardInfo, null, item_num * 100); // 넘겨주는 balance가 결제할 금액
@@ -108,7 +108,7 @@ public class Controller {
         PaymentManager paymentManager = new PaymentManager();
         if (paymentManager.pay(cardInfo, cardInfo.balance)) {
             System.out.println("Payment success");
-            uiManager.display("PaymentUI-2", stock.itemList(), item, null, null);
+            uiManager.display("PaymentUI_2", stock.itemList(), item, null, null);
             String garbage = uiManager.waitForInputString();
 
             dispenseItems(item.code, item.quantity);
