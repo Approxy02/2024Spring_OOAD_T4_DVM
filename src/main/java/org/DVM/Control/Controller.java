@@ -4,7 +4,6 @@ import org.DVM.Control.Communication.CommunicationManager;
 import org.DVM.Control.Communication.Message;
 import org.DVM.Control.Communication.MessageType;
 import org.DVM.Control.Communication.OtherDVM;
-import org.DVM.Control.Payment.Bank;
 import org.DVM.Control.Payment.Card;
 import org.DVM.Control.Payment.CardReader;
 import org.DVM.Control.Payment.PaymentManager;
@@ -45,6 +44,10 @@ public class Controller {
             uiManager.display("MainUI", null, null, null, null);
         }).start();
 
+        mainAction();
+    }
+
+    public void mainAction() {
         // Wait for user input in the main thread
         String userInput = uiManager.waitForInputString();
         System.out.println("User input: " + userInput);
@@ -55,9 +58,16 @@ public class Controller {
             int itemCode = Integer.parseInt(itemInfo[0]);
             int itemNum = Integer.parseInt(itemInfo[1]);
 
-            selectItems(itemCode, itemNum);
+            if(itemCode >= 1 && itemCode <=20)
+                selectItems(itemCode, itemNum);
+            else{
+                uiManager.displayError("잘못된 상품 코드입니다. 다시 입력해주세요");
+
+                mainAction();
+            }
         } else {
             System.out.println("이건 인증코드 버튼");
+            inputVCode(userInput);
         }
     }
 
@@ -116,27 +126,29 @@ public class Controller {
         } else {
             System.out.println("Payment failed");
 
+            uiManager.displayError("결제에 실패했습니다! 다시 시도해주세요");
+
             uiManager.display("MainUI", null, null, null, null);
 
-            String userInput = uiManager.waitForInputString();
-            System.out.println("User input: " + userInput);
-
-            if (userInput.length() != 10 && userInput.contains(" ")) {
-                System.out.println("이건 결제 버튼");
-                String[] itemInfo = userInput.split(" ");
-                int itemCode = Integer.parseInt(itemInfo[0]);
-                int itemNum = Integer.parseInt(itemInfo[1]);
-
-                selectItems(itemCode, itemNum);
-            } else {
-                System.out.println("이건 인증코드 버튼");
-            }
+            mainAction();
 
         }
 
     }
 
     public void inputVCode(String vCode) {
+        if(verificationManager.verifyVCode(vCode)){
+            Item dis = verificationManager.getItems(vCode);
+            verificationManager.removeVCode(vCode);
+            dispenseItems(dis.code, dis.quantity);
+        }
+        else{
+            uiManager.displayError("인증코드를 다시 입력하세요");
+
+            uiManager.display("MainUI", null, null, null, null);
+
+            mainAction();
+        }
     }
 
     public boolean checkPrepayAvailability(Message msg_info) {
@@ -167,6 +179,8 @@ public class Controller {
 
     public void dispenseItems(int item_code, int item_num) {
         System.out.println("Item dispensed");
+        Item dis = stock.getItems(item_code);
+        item = new Item(dis.name, item_code, item_num, 0);
         uiManager.display("DispenseResultUI", stock.itemList(), item, null, null);
 
         String garbage = uiManager.waitForInputString();
@@ -175,19 +189,7 @@ public class Controller {
 
         uiManager.display("MainUI", null, null, null, null);
 
-        String userInput = uiManager.waitForInputString();
-        System.out.println("User input: " + userInput);
-
-        if (userInput.length() != 10 && userInput.contains(" ")) {
-            System.out.println("이건 결제 버튼");
-            String[] itemInfo = userInput.split(" ");
-            int itemCode = Integer.parseInt(itemInfo[0]);
-            int itemNum = Integer.parseInt(itemInfo[1]);
-
-            selectItems(itemCode, itemNum);
-        } else {
-            System.out.println("이건 인증코드 버튼");
-        }
+        mainAction();
 
     }
 

@@ -2,6 +2,7 @@ package org.DVM;
 
 
 import org.DVM.Control.Controller;
+import org.DVM.Control.Verification.VerificationManager;
 import org.DVM.Stock.Item;
 import org.DVM.Stock.Stock;
 import org.DVM.UI.UIManager;
@@ -9,51 +10,12 @@ import org.DVM.UI.UIManager;
 public class Main {
     public static void main(String[] args) {
 
-//        Item[] items = new Item[20];
-//        items[0] = new Item("콜라", 1, 0, 0); //재고가 진짜 없거나 우리 DVM에서 취급 X인 음료
-//        items[1] = new Item("사이다", 2, 0, 0);
-//        items[2] = new Item("사이다", 2, 0, 0);
-//        items[3] = new Item("사이다", 2, 0, 0);
-//        items[4] = new Item("사이다", 2, 0, 0);
-//        items[5] = new Item("사이다", 2, 0, 0);
-//        items[6] = new Item("사이다", 2, 0, 0);
-//        items[7] = new Item("사이다", 2, 0, 0);
-//        items[8] = new Item("사이다", 2, 0, 0);
-//        items[9] = new Item("사이다", 2, 0, 0);
-//        items[10] = new Item("사이다", 2, 0, 0);
-//        items[11] = new Item("사이다", 2, 0, 0);
-//        items[14] = new Item("사이다", 2, 0, 0);
-//        items[15] = new Item("사이다", 2, 0, 0);
-//        items[16] = new Item("사이다", 2, 0, 0);
-//        items[17] = new Item("사이다", 2, 0, 0);
-//        items[18] = new Item("사이다", 2, 0, 0);
-//        items[19] = new Item("사이다", 2, 0, 0);
-
-//        Stock stock = new Stock();
-//
-//        for(Item item : stock.itemList()){
-//            System.out.println(item);
-//        }
-//
-//        Controller controller = new Controller();
-//        controller.start();
-
-//        UIManager uiManager = new UIManager();
-//        String s = uiManager.display("MainUI", null, null, null, null);
-//        System.out.println("s : " + s);
-
-
-//        UIManager uiManager = new UIManager();
-//        new Thread(() -> {
-//            uiManager.display("MainUI", null, null, null, null);
-//        }).start();
-//
-//        // Wait for user input
-//        String userInput = uiManager.waitForInput();
-//        System.out.println("User input: " + userInput);
-
         Controller controller = new Controller();
         controller.start();
 
+//        VerificationManager verificationManager = new VerificationManager();
+//        String s = verificationManager.createVerificationCode();
+//        System.out.println(s);
+//        verificationManager.saveVCode(s, 1, 1);
     }
 }

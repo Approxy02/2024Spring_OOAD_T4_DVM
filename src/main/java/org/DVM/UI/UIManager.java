@@ -239,6 +239,10 @@ public class UIManager extends JFrame {
         }
     }
 
+    public void displayError(String msg){
+        JOptionPane.showMessageDialog(null, msg);
+    }
+
     public synchronized String waitForInputString() {
         try {
             wait();

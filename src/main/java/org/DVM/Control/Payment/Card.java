@@ -11,5 +11,13 @@ public class Card {
         this.balance = balance;
     }
 
+    @Override
+    public String toString() {
+        return "Card{" +
+                "cardNum='" + cardNum + '\'' +
+                ", cardType='" + cardType + '\'' +
+                ", balance=" + balance +
+                '}';
+    }
 
 }
