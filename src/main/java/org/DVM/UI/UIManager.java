@@ -36,6 +36,18 @@ public class UIManager extends JFrame {
 
             this.add(titlePanel, BorderLayout.NORTH);
         }
+
+        protected void processItems(ArrayList<Item> items) {}
+        protected void processItem(Item item) {}
+        protected void processDVM(OtherDVM dvm) {}
+        protected void processVCode(String vCode) {}
+
+        public final void processInput(ArrayList<Item> items, Item item, OtherDVM dvm, String vCode) {
+            this.processItems(items);
+            this.processItem(item);
+            this.processDVM(dvm);
+            this.processVCode(vCode);
+        }
     }
 
     private class UITextField extends JTextField {
@@ -161,6 +173,8 @@ public class UIManager extends JFrame {
 
     //endregion
 
+    //region <UI 객체 선언>
+
     private final CardLayout layout = new CardLayout();
 
     private final JPanel showPanel;
@@ -168,6 +182,8 @@ public class UIManager extends JFrame {
     private void showUI(String name){
         layout.show(showPanel, name);
     }
+
+    private String mainDisplayString = null;
 
     private void process(String... args) {
         mainDisplayString = "";
@@ -211,93 +227,49 @@ public class UIManager extends JFrame {
         setVisible(true);
     }
 
-    public void display(String UItype, ArrayList<Item> items, Item item, OtherDVM dvm, String vCode) {
-        switch (UItype) {
-            case "MainUI":
-                mainUIdisplay(items);
-                break;
-            case "PaymentUI_1":
-                payUI_1(item);
-                break;
-            case "PaymentUI_2":
-                payUI_2(item);
-                break;
-            case "PrepaymentUI_1":
-                prepayUI_1(item);
-                break;
-            case "PrepaymentUI_2":
-                prepayUI_2(item);
-                break;
-            case "LocationInfoUI":
-                locationInfoUI(item, dvm);
-                break;
-            case "VerificationCodeDisplayUI":
-                vCodeUI(item);
-                break;
-            case "DispenseResultUI":
-                dispenseUI(item);
-                break;
-            default:
-                break;
+    public void display(String UIType, ArrayList<Item> items, Item item, OtherDVM dvm, String vCode) {
+        UIPanel panel = UIPanels.get(UIType);
+
+        if(panel != null){
+            panel.processInput(items, item, dvm, vCode);
+
+            showUI(UIType);
+
+            System.out.println(UIType);
         }
     }
-    
-    private String mainDisplayString = null;
-    private ArrayList<Item> items = null;
+
+    public synchronized String waitForInputString() {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return mainDisplayString;
+    }
+
+    public synchronized Item waitForInput() {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return item;
+    }
+
+    //endregion
+ 
+    //region <UI 실제 구현>
     private Item item = new Item("null", 0, 0, 0);
-    private JLabel categoryValue;
-    private JLabel quantityValue;
-    private JLabel categoryValue1;
-    private JLabel quantityValue1;
-    private JLabel categoryValue2;
-    private JLabel quantityValue2;
-    private JLabel nameValue;
-    private JLabel locationValue;
-    private void mainUIdisplay(ArrayList<Item> items) {
-        this.items = items;
-        showUI("MainUI");
-    }
-
-    private void payUI_1(Item item) {
-        System.out.println("payUI_1");
-        this.item = item;
-        categoryValue.setText(item.name + "(" + item.code + ")");
-        quantityValue.setText(String.valueOf(item.quantity));
-        showUI("PaymentUI_1");
-    }
-
-    private void payUI_2(Item item) {
-        System.out.println("payUI_2");
-        categoryValue1.setText(item.name + "(" + item.code + ")");
-        quantityValue1.setText(String.valueOf(item.quantity));
-        showUI("PaymentUI_2");
-    }
-
-    private String prepayUI_1(Item item) {
-        return "";
-    }
-
-    private void prepayUI_2(Item item) {
-    }
-
-    private void locationInfoUI(Item item, OtherDVM dvm) {
-        System.out.println("locationInfoUI");
-        nameValue.setText(dvm.name);
-        locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
-        showUI("LocationInfoUI");
-    }
-
-    private void vCodeUI(Item item) {
-    }
-
-    private void dispenseUI(Item item) {
-        System.out.println("dispenseUI");
-        categoryValue2.setText(item.name + "(" + item.code + ")");
-        quantityValue2.setText(String.valueOf(item.quantity));
-        showUI("DispenseResultUI");
-    }
 
     private class UIMain extends UIPanel {
+        private ArrayList<Item> items = null;
+
+        @Override
+        protected void processItems(ArrayList<Item> items) {
+            this.items = items;
+        }
+
         public UIMain(){
             super();
 
@@ -362,6 +334,15 @@ public class UIManager extends JFrame {
     }
 
     private class UIPayment1 extends UIPanel {
+        private JLabel categoryValue;
+        private JLabel quantityValue;
+
+        @Override
+        protected void processItem(Item item) {
+            categoryValue.setText(item.name + "(" + item.code + ")");
+            quantityValue.setText(String.valueOf(item.quantity));
+        }
+
         public UIPayment1() {
             // Item Info Panel
             JPanel itemInfoPanel = new JPanel();
@@ -411,6 +392,15 @@ public class UIManager extends JFrame {
     }
 
     private class UIPayment2 extends UIPanel {
+        private JLabel categoryValue;
+        private JLabel quantityValue;
+
+        @Override
+        protected void processItem(Item item) {
+            categoryValue.setText(item.name + "(" + item.code + ")");
+            quantityValue.setText(String.valueOf(item.quantity));
+        }
+
         public UIPayment2() {
             // Item Info Panel
             JPanel itemInfoPanel = new JPanel();
@@ -419,16 +409,16 @@ public class UIManager extends JFrame {
 
             JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
             categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            categoryValue1 = new JLabel("콜라(01)", JLabel.CENTER);
+            categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
 
             JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
             quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            quantityValue1 = new JLabel("5", JLabel.CENTER);
+            quantityValue = new JLabel("5", JLabel.CENTER);
 
             itemInfoPanel.add(categoryLabel);
-            itemInfoPanel.add(categoryValue1);
+            itemInfoPanel.add(categoryValue);
             itemInfoPanel.add(quantityLabel);
-            itemInfoPanel.add(quantityValue1);
+            itemInfoPanel.add(quantityValue);
 
             this.add(itemInfoPanel, BorderLayout.CENTER);
 
@@ -450,6 +440,7 @@ public class UIManager extends JFrame {
             });
         }
     }
+
     private class UIPrePayment1 extends UIPanel {
         public UIPrePayment1() {
             // Item Info Panel
@@ -599,6 +590,15 @@ public class UIManager extends JFrame {
     }
 
     private class UILocationInfo extends UIPanel {
+        private JLabel nameValue;
+        private JLabel locationValue;
+
+        @Override
+        protected void processDVM(OtherDVM dvm) {
+            nameValue.setText(dvm.name);
+            locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
+        }
+
         public UILocationInfo() {
             // Info Panel
             JPanel infoPanel = new JPanel();
@@ -635,6 +635,15 @@ public class UIManager extends JFrame {
     }
 
     private class UIDispenseResult extends UIPanel {
+        private JLabel categoryValue;
+        private JLabel quantityValue;
+
+        @Override
+        protected void processItem(Item item) {
+            categoryValue.setText(item.name + "(" + item.code + ")");
+            quantityValue.setText(String.valueOf(item.quantity));
+        }
+
         public UIDispenseResult() {
             // Item Info Panel
             JPanel itemInfoPanel = new JPanel();
@@ -643,16 +652,16 @@ public class UIManager extends JFrame {
 
             JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
             categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            categoryValue2 = new JLabel("콜라(01)", JLabel.CENTER);
+            categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
 
             JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
             quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            quantityValue2 = new JLabel("5", JLabel.CENTER);
+            quantityValue = new JLabel("5", JLabel.CENTER);
 
             itemInfoPanel.add(categoryLabel);
-            itemInfoPanel.add(categoryValue2);
+            itemInfoPanel.add(categoryValue);
             itemInfoPanel.add(quantityLabel);
-            itemInfoPanel.add(quantityValue2);
+            itemInfoPanel.add(quantityValue);
 
             this.add(itemInfoPanel, BorderLayout.CENTER);
 
@@ -676,22 +685,5 @@ public class UIManager extends JFrame {
             });
         }
     }
-
-    public synchronized String waitForInputString() {
-        try {
-            wait();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return mainDisplayString;
-    }
-
-    public synchronized Item waitForInput() {
-        try {
-            wait();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return item;
-    }
+    //endregion
 }
