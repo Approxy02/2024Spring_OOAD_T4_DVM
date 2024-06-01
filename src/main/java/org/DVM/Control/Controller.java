@@ -14,6 +14,8 @@ import org.DVM.Stock.Item;
 
 import java.util.ArrayList;
 
+import static java.lang.Thread.sleep;
+
 public class Controller {
     private UIManager uiManager;
     private Stock stock;
@@ -40,9 +42,31 @@ public class Controller {
 
     public void start() {
         // Display MainUI in a new thread
-        new Thread(() -> {
-            uiManager.display("MainUI", null, null, null, null);
-        }).start();
+
+        Thread thread = new Thread(() -> {
+            communicationManager.startServer((Message message) -> {
+                switch(message.msg_type){
+                    case req_stock:
+                        if(checkStock(message)){
+                            Message msg_info = new Message(MessageType.req_stock, src_id, message.src_id, null);
+                            communicationManager.sendMessage("");
+                        }
+                        break;
+                    case req_prepay:
+                        if(checkPrepayAvailability(message)){
+                            Message msg_info = new Message(MessageType.req_prepay, src_id, message.src_id, null);
+                            communicationManager.sendMessage("msg_info");
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+            });
+        });
+        thread.start();
+
+        uiManager.display("MainUI", null, null, null, null);
 
         mainAction();
     }
@@ -58,9 +82,9 @@ public class Controller {
             int itemCode = Integer.parseInt(itemInfo[0]);
             int itemNum = Integer.parseInt(itemInfo[1]);
 
-            if(itemCode >= 1 && itemCode <=20)
+            if (itemCode >= 1 && itemCode <= 20)
                 selectItems(itemCode, itemNum);
-            else{
+            else {
                 uiManager.displayError("잘못된 상품 코드입니다. 다시 입력해주세요");
 
                 mainAction();
@@ -112,10 +136,10 @@ public class Controller {
     }
 
     public void insertCard(Card card) {
-        CardReader cardReader = new CardReader();
+//        CardReader cardReader = new CardReader();
         Card cardInfo = cardReader.getCardInfo(card);
 
-        PaymentManager paymentManager = new PaymentManager();
+//        PaymentManager paymentManager = new PaymentManager();
         if (paymentManager.pay(cardInfo, cardInfo.balance)) {
             System.out.println("Payment success");
             uiManager.display("PaymentUI_2", stock.itemList(), item, null, null);
@@ -137,12 +161,11 @@ public class Controller {
     }
 
     public void inputVCode(String vCode) {
-        if(verificationManager.verifyVCode(vCode)){
+        if (verificationManager.verifyVCode(vCode)) {
             Item dis = verificationManager.getItems(vCode);
             verificationManager.removeVCode(vCode);
             dispenseItems(dis.code, dis.quantity);
-        }
-        else{
+        } else {
             uiManager.displayError("인증코드를 다시 입력하세요");
 
             uiManager.display("MainUI", null, null, null, null);

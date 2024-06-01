@@ -2,7 +2,21 @@ package org.DVM.Control.Communication;
 
 import com.google.gson.Gson;
 
+import java.util.function.Consumer;
+
 public class CommunicationManager {
+
+    private JsonServer server = new JsonServer(1234);
+
+    public CommunicationManager() {
+
+    }
+
+    public void startServer(Consumer<Message> callback) {
+        server.callback = callback;
+
+        server.startServer();
+    }
 
     private String createMessage(Message msg_info) {
         Gson message = new Gson();
@@ -11,7 +25,7 @@ public class CommunicationManager {
 
     }
 
-    private void sendMessage(String message) {
+    public void sendMessage(String message) {
         System.out.println(message);
     }
 
