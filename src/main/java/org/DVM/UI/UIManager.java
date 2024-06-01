@@ -5,55 +5,189 @@ import org.DVM.Stock.Item;
 import org.DVM.Stock.Stock;
 
 import javax.swing.*;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DocumentFilter;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.Console;
 import java.util.ArrayList;
 
 public class UIManager extends JFrame {
-    private String UItype;
-    private String errorMsg;
-    private CardLayout cardLayout;
-    private JPanel mainPanel;
-    private String mainDisplayString = null;
-    private ArrayList<Item> items = null;
-    private Item item = new Item("null", 0, 0, 0);
-    private JLabel categoryValue;
-    private JLabel quantityValue;
-    private JLabel categoryValue1;
-    private JLabel quantityValue1;
-    private JLabel categoryValue2;
-    private JLabel quantityValue2;
-    private JLabel nameValue;
-    private JLabel locationValue;
+    String title = "Distributed Vending Machine";
 
+    //region <UI 객체 정의>
+
+    private class UIPanel extends JPanel{
+        public UIPanel(){
+            super(new BorderLayout());
+
+            // Title Panel
+            JPanel titlePanel = new JPanel();
+            JLabel titleLabel = new JLabel(title, JLabel.CENTER);
+            
+            titleLabel.setFont(new Font(titleLabel.getFont().getFontName(), Font.BOLD, 18));
+            titlePanel.add(titleLabel);
+
+            this.add(titlePanel, BorderLayout.NORTH);
+        }
+    }
+
+    private class UITextField extends JTextField {
+        private final Document document = super.getDocument();
+        private final Document placeHolderDocument = new PlainDocument();
+
+        private String placeHolder;
+
+        @Override
+        public String getText() {
+            try {
+                return this.document.getText(0, this.document.getLength());
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void setText(String text) {
+            try {
+
+                this.document.remove(0, this.document.getLength());
+                this.document.insertString(0, text, null);
+
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public String getPlaceHolder() { return this.placeHolder; }
+
+        public void setPlaceHolder(String placeHolder) {
+            this.placeHolder = placeHolder;
+
+            try {
+
+                this.placeHolderDocument.remove(0, this.placeHolderDocument.getLength());
+                this.placeHolderDocument.insertString(0, placeHolder, null);
+
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private void showPlaceHolder() {
+            super.setDocument(this.placeHolderDocument);
+
+            this.setForeground(Color.GRAY);
+        }
+
+        private void hidePlaceHolder() {
+            super.setDocument(this.document);
+
+            this.setForeground(Color.BLACK);
+        }
+
+        public UITextField() {
+            this("", "");
+        }
+
+        public UITextField(String text) {
+            this(text, "");
+        }
+
+        public UITextField(String text, String placeHolder) {
+            setText(text); setPlaceHolder(placeHolder);
+
+            if(this.document.getLength() == 0) {
+                this.showPlaceHolder();
+            }
+            else{
+                this.hidePlaceHolder();
+            }
+
+            this.addFocusListener(new FocusListener() {
+                @Override
+                public void focusGained(FocusEvent e) {
+                    hidePlaceHolder();
+                }
+
+                @Override
+                public void focusLost(FocusEvent e) {
+                    if(document.getLength() == 0) showPlaceHolder();
+                }
+            });
+        }
+
+        public void setRegexFilter(String regex) {
+            ((AbstractDocument)this.document).setDocumentFilter(new DocumentFilter() {
+                @Override
+                public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                    if (string == null) {
+                        return;
+                    }
+
+                    if (string.matches(regex)) {
+                        super.insertString(fb, offset, string, attr);
+                    }
+                }
+
+                @Override
+                public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                    if (text == null) {
+                        return;
+                    }
+
+                    if (text.matches(regex)) {
+                        super.replace(fb, offset, length, text, attrs);
+                    }
+                }
+
+                @Override
+                public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
+                    super.remove(fb, offset, length);
+                }
+            });
+        }
+
+        public void setNumericOnly(){
+            this.setRegexFilter("\\d+");
+        }
+    }
+
+    //endregion
+
+    private final CardLayout layout;
+
+    private final JPanel showPanel;
+
+    private void showUI(String name){
+        layout.show(showPanel, name);
+    }
 
     public UIManager() {
-//        this.UItype = UItype;
-        setTitle("Distributed Vending Machine");
+        setTitle(title);
+        setLocationRelativeTo(null);
         setSize(600, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
+
+        layout = new CardLayout();
+
+        showPanel = new JPanel(layout);
 
         // Add all panels
-        mainPanel.add(createMainPanel(), "MainPanel");
-        mainPanel.add(createPaymentPanel1(), "PaymentPanel1");
-        mainPanel.add(createPaymentPanel2(), "PaymentPanel2");
-        mainPanel.add(createPrePaymentPanel1(), "PrePaymentPanel1");
-        mainPanel.add(createPrePaymentPanel2(), "PrePaymentPanel2");
-        mainPanel.add(createVerificationCodePanel(), "VerificationCodePanel");
-        mainPanel.add(createLocationInfoPanel(), "LocationInfoPanel");
-        mainPanel.add(createDispenseResultPanel(), "DispenseResultPanel");
+        showPanel.add(createMainPanel(), "MainPanel");
+        showPanel.add(createPaymentPanel1(), "PaymentPanel1");
+        showPanel.add(createPaymentPanel2(), "PaymentPanel2");
+        showPanel.add(createPrePaymentPanel1(), "PrePaymentPanel1");
+        showPanel.add(createPrePaymentPanel2(), "PrePaymentPanel2");
+        showPanel.add(createVerificationCodePanel(), "VerificationCodePanel");
+        showPanel.add(createLocationInfoPanel(), "LocationInfoPanel");
+        showPanel.add(createDispenseResultPanel(), "DispenseResultPanel");
 
-        add(mainPanel);
+        add(showPanel);
 
         setVisible(true);
     }
@@ -87,13 +221,22 @@ public class UIManager extends JFrame {
             default:
                 break;
         }
-//        return "Out of switch statement";
     }
-
-
+    
+    private String mainDisplayString = null;
+    private ArrayList<Item> items = null;
+    private Item item = new Item("null", 0, 0, 0);
+    private JLabel categoryValue;
+    private JLabel quantityValue;
+    private JLabel categoryValue1;
+    private JLabel quantityValue1;
+    private JLabel categoryValue2;
+    private JLabel quantityValue2;
+    private JLabel nameValue;
+    private JLabel locationValue;
     private void mainUIdisplay(ArrayList<Item> items) {
         this.items = items;
-        cardLayout.show(mainPanel, "MainPanel");
+        showUI("MainPanel");
     }
 
     private void payUI_1(Item item) {
@@ -101,14 +244,14 @@ public class UIManager extends JFrame {
         this.item = item;
         categoryValue.setText(item.name + "(" + item.code + ")");
         quantityValue.setText(String.valueOf(item.quantity));
-        cardLayout.show(mainPanel, "PaymentPanel1");
+        showUI("PaymentPanel1");
     }
 
     private void payUI_2(Item item) {
         System.out.println("payUI_2");
         categoryValue1.setText(item.name + "(" + item.code + ")");
         quantityValue1.setText(String.valueOf(item.quantity));
-        cardLayout.show(mainPanel, "PaymentPanel2");
+        showUI("PaymentPanel2");
     }
 
     private String prepayUI_1(Item item) {
@@ -122,7 +265,7 @@ public class UIManager extends JFrame {
         System.out.println("locationInfoUI");
         nameValue.setText(dvm.name);
         locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
-        cardLayout.show(mainPanel, "LocationInfoPanel");
+        showUI("LocationInfoPanel");
     }
 
     private void vCodeUI(Item item) {
@@ -132,19 +275,12 @@ public class UIManager extends JFrame {
         System.out.println("dispenseUI");
         categoryValue2.setText(item.name + "(" + item.code + ")");
         quantityValue2.setText(String.valueOf(item.quantity));
-        cardLayout.show(mainPanel, "DispenseResultPanel");
+        showUI("DispenseResultPanel");
     }
 
 
     private JPanel createMainPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // Title Panel
-        JPanel titlePanel = new JPanel();
-        JLabel titleLabel = new JLabel("Distributed Vending Machine", JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titlePanel.add(titleLabel);
-        panel.add(titlePanel, BorderLayout.NORTH);
+        UIPanel panel = new UIPanel();
 
         // Item Grid Panel
         JPanel itemGridPanel = new JPanel();
@@ -171,19 +307,17 @@ public class UIManager extends JFrame {
         inputPanel.setLayout(new GridLayout(2, 4, 10, 10));
         inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JTextField categoryField = new JTextField("");
-        addPlaceholderText(categoryField, "종류(코드입력)");
-        setInputNumericOnly(categoryField);
+        UITextField categoryField = new UITextField("", "종류(코드입력)");
 
-        JTextField quantityField = new JTextField("");
-        addPlaceholderText(quantityField, "수량(0~99)");
-        setInputNumericOnly(quantityField);
+        categoryField.setNumericOnly();
+
+        UITextField quantityField = new UITextField("", "수량(0~99)");
+        quantityField.setNumericOnly();
 
 
         JButton purchaseButton = new JButton("구매하기");
 
-        JTextField verificationCodeField = new JTextField("");
-        addPlaceholderText(verificationCodeField, "인증코드");
+        UITextField verificationCodeField = new UITextField("", "인증코드");
 
         JButton prePaymentCodeButton = new JButton("선결제 인증코드");
 
@@ -221,14 +355,7 @@ public class UIManager extends JFrame {
     }
 
     private JPanel createPaymentPanel1() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // Title Panel
-        JPanel titlePanel = new JPanel();
-        JLabel titleLabel = new JLabel("Distributed Vending Machine", JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titlePanel.add(titleLabel);
-        panel.add(titlePanel, BorderLayout.NORTH);
+        UIPanel panel = new UIPanel();
 
         // Item Info Panel
         JPanel itemInfoPanel = new JPanel();
@@ -260,8 +387,8 @@ public class UIManager extends JFrame {
         paymentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JLabel cardNumberLabel = new JLabel("카드 번호를 입력해주세요.");
-        JTextField cardNumberField = new JTextField("카드번호");
-        setInputNumericOnly(cardNumberField);
+        UITextField cardNumberField = new UITextField("", "카드번호");
+        cardNumberField.setNumericOnly();
 
         JButton paymentButton = new JButton("결제");
 
@@ -286,14 +413,7 @@ public class UIManager extends JFrame {
     }
 
     private JPanel createPaymentPanel2() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // Title Panel
-        JPanel titlePanel = new JPanel();
-        JLabel titleLabel = new JLabel("Distributed Vending Machine", JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titlePanel.add(titleLabel);
-        panel.add(titlePanel, BorderLayout.NORTH);
+        UIPanel panel = new UIPanel();
 
         // Item Info Panel
         JPanel itemInfoPanel = new JPanel();
@@ -339,14 +459,7 @@ public class UIManager extends JFrame {
     }
 
     private JPanel createPrePaymentPanel1() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // Title Panel
-        JPanel titlePanel = new JPanel();
-        JLabel titleLabel = new JLabel("Distributed Vending Machine", JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titlePanel.add(titleLabel);
-        panel.add(titlePanel, BorderLayout.NORTH);
+        UIPanel panel = new UIPanel();
 
         // Item Info Panel
         JPanel itemInfoPanel = new JPanel();
@@ -380,7 +493,7 @@ public class UIManager extends JFrame {
         paymentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JLabel cardNumberLabel = new JLabel("카드 번호를 입력해주세요.");
-        JTextField cardNumberField = new JTextField("카드번호");
+        UITextField cardNumberField = new UITextField("", "카드번호");
         JButton paymentButton = new JButton("결제");
 
         paymentPanel.add(cardNumberLabel);
@@ -399,7 +512,7 @@ public class UIManager extends JFrame {
                 paymentButton.setEnabled(true);
                 cardNumberField.setEnabled(true);
                 JOptionPane.showMessageDialog(this, "결제가 완료되었습니다!");
-                cardLayout.show(mainPanel, "PrePaymentPanel2");
+                showUI("PrePaymentPanel2");
             });
             timer.setRepeats(false);
             timer.start();
@@ -409,14 +522,7 @@ public class UIManager extends JFrame {
     }
 
     private JPanel createPrePaymentPanel2() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // Title Panel
-        JPanel titlePanel = new JPanel();
-        JLabel titleLabel = new JLabel("Distributed Vending Machine", JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titlePanel.add(titleLabel);
-        panel.add(titlePanel, BorderLayout.NORTH);
+        UIPanel panel = new UIPanel();
 
         // Item Info Panel
         JPanel itemInfoPanel = new JPanel();
@@ -457,20 +563,13 @@ public class UIManager extends JFrame {
 
         panel.add(confirmationPanel, BorderLayout.SOUTH);
 
-        receiveCodeButton.addActionListener(e -> cardLayout.show(mainPanel, "MainPanel"));
+        receiveCodeButton.addActionListener(e -> showUI("MainPanel"));
 
         return panel;
     }
 
     private JPanel createVerificationCodePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // Title Panel
-        JPanel titlePanel = new JPanel();
-        JLabel titleLabel = new JLabel("Distributed Vending Machine", JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titlePanel.add(titleLabel);
-        panel.add(titlePanel, BorderLayout.NORTH);
+        UIPanel panel = new UIPanel();
 
         // Info Panel
         JPanel infoPanel = new JPanel();
@@ -508,20 +607,13 @@ public class UIManager extends JFrame {
 
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "MainPanel"));
+        backButton.addActionListener(e -> showUI("MainPanel"));
 
         return panel;
     }
 
     private JPanel createLocationInfoPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // Title Panel
-        JPanel titlePanel = new JPanel();
-        JLabel titleLabel = new JLabel("Distributed Vending Machine", JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titlePanel.add(titleLabel);
-        panel.add(titlePanel, BorderLayout.NORTH);
+        UIPanel panel = new UIPanel();
 
         // Info Panel
         JPanel infoPanel = new JPanel();
@@ -553,20 +645,13 @@ public class UIManager extends JFrame {
 
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        nextButton.addActionListener(e -> cardLayout.show(mainPanel, "MainPanel"));
+        nextButton.addActionListener(e -> showUI("MainPanel"));
 
         return panel;
     }
 
     private JPanel createDispenseResultPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // Title Panel
-        JPanel titlePanel = new JPanel();
-        JLabel titleLabel = new JLabel("Distributed Vending Machine", JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titlePanel.add(titleLabel);
-        panel.add(titlePanel, BorderLayout.NORTH);
+        UIPanel panel = new UIPanel();
 
         // Item Info Panel
         JPanel itemInfoPanel = new JPanel();
@@ -612,6 +697,7 @@ public class UIManager extends JFrame {
 
     public synchronized String returnString(String s) {
         mainDisplayString = s;
+
         return mainDisplayString;
     }
 
@@ -632,59 +718,4 @@ public class UIManager extends JFrame {
         }
         return item;
     }
-
-    private void setInputNumericOnly(JTextField textField) {
-        ((AbstractDocument) textField.getDocument()).setDocumentFilter(new DocumentFilter() {
-            @Override
-            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
-                if (string == null) {
-                    return;
-                }
-
-                if (string.matches("\\d+")) {
-                    super.insertString(fb, offset, string, attr);
-                }
-            }
-
-            @Override
-            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-                if (text == null) {
-                    return;
-                }
-
-                if (text.matches("\\d+")) {
-                    super.replace(fb, offset, length, text, attrs);
-                }
-            }
-
-            @Override
-            public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
-                super.remove(fb, offset, length);
-            }
-        });
-    }
-
-    private void addPlaceholderText(JTextField textField, String placeholderText) {
-        textField.setForeground(Color.GRAY);
-        textField.setText(placeholderText);
-
-        textField.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if (textField.getText().equals(placeholderText)) {
-                    textField.setText("");
-                    textField.setForeground(Color.BLACK);
-                }
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (textField.getText().isEmpty()) {
-                    textField.setForeground(Color.GRAY);
-                    textField.setText(placeholderText);
-                }
-            }
-        });
-    }
-
 }
