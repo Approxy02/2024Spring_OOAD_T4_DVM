@@ -1,7 +1,5 @@
 package org.DVM.Control.Communication;
 
-import com.google.gson.Gson;
-
 import java.util.function.Consumer;
 
 public class CommunicationManager {
@@ -18,14 +16,20 @@ public class CommunicationManager {
         server.startServer();
     }
 
-    private String createMessage(Message msg_info) {
-        Gson message = new Gson();
-        String s = message.toJson(msg_info);
-        return s;
+    public Message createMessage(Message msg_info) {
+//        Gson message = new Gson();
+//        String s = message.toJson(msg_info);
+        return msg_info;
 
     }
 
-    public void sendMessage(String message) {
+    public void sendMessageToClient(Message message) { //상대 client 가 보낸 요청에 대한 응답을 보낼때
+
+        System.out.println(message);
+    }
+
+    public void sendMessageToServer(Message message) { //상대 server 에게 요청을 보낼때
+
         System.out.println(message);
     }
 
@@ -33,13 +37,15 @@ public class CommunicationManager {
         return null;
     }
 
-    public boolean requesPrepayToDVM(Message msg_info) {
+    public void requesPrepayToDVM(Message msg_info) {
 //        String message = createMessage(msg_info);
 //        sendMessage(message);
-        return true;
     }
 
     public Message requestCheckStockToDVM(Message msg_info) {
+
+        sendMessageToServer(msg_info);
+
         return null;
     }
 
