@@ -22,18 +22,18 @@ public class Main {
             controller.start();
         }).start();
 
-        sleep(1000);
-        JsonClient client = new JsonClient("localhost", 1234);
-        client.startClient();
-
-        HashMap<String, String> msg_content = new HashMap<>();
-
-        msg_content.put("item_code", String.valueOf(1));
-        msg_content.put("item_num", String.valueOf(5));
-        msg_content.put("coor_x", String.valueOf(10));
-        msg_content.put("coor_y", String.valueOf(10));
-        Message resp = client.sendMessage(new Message(MessageType.req_stock, "Team4", "Team4", msg_content));
-        System.out.println(resp.msg_content.get("item_code"));
+//        sleep(1000);
+//        JsonClient client = new JsonClient("localhost", 1234);
+//        client.startClient();
+//
+//        HashMap<String, String> msg_content = new HashMap<>();
+//
+//        msg_content.put("item_code", String.valueOf(1));
+//        msg_content.put("item_num", String.valueOf(5));
+//        msg_content.put("coor_x", String.valueOf(10));
+//        msg_content.put("coor_y", String.valueOf(10));
+//        Message resp = client.sendMessage(new Message(MessageType.req_stock, "Team4", "Team4", msg_content));
+//        System.out.println(resp.msg_content.get("item_code"));
 
 //        VerificationManager verificationManager = new VerificationManager();
 //        String s = verificationManager.createVerificationCode();

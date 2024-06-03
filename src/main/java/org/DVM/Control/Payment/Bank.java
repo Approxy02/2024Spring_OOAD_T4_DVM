@@ -54,7 +54,7 @@ public class Bank {
 
                 this.cards.add(card);
 
-                System.out.println(card);
+//                System.out.println(card);
             }
         } catch (Exception e) {
             System.err.println("Error reading card file");
