@@ -1,6 +1,7 @@
 package org.DVM.Control.Communication;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.net.Socket;
@@ -41,10 +42,10 @@ public class JsonSocketService implements SocketService {
         try {
             String inputLine;
             while ((inputLine = reader.readLine()) != null) {
-                System.out.println("Received: " + inputLine);
+                System.out.println("Received at JsonSoketService: " + inputLine);
 
                 // JSON 문자열을 Message 객체로 변환하는 로직 필요
-                Message receivedMessage = parseMessage(inputLine);
+                Message receivedMessage = gson.fromJson(inputLine, Message.class);
 
                 // 콜백으로 메시지 전달
                 callback.onMessageReceived(receivedMessage);
@@ -60,6 +61,7 @@ public class JsonSocketService implements SocketService {
 
     @Override
     public void sendMessage(Object message) {
+        System.out.println("JSON : " + gson.toJson(message));
         writer.println(gson.toJson(message));
     }
 
@@ -75,6 +77,11 @@ public class JsonSocketService implements SocketService {
     private Message parseMessage(String inputLine) {
         // JSON 문자열을 Message 객체로 변환하는 로직 구현
         System.out.println("Parsing message: " + inputLine);
+        // Gson 인스턴스 생성
+        Gson gson = new GsonBuilder().create();
+
+        // JSON 문자열을 Message 객체로 변환
+        Message message = gson.fromJson(inputLine, Message.class);
         return null; // 예시 반환값
     }
 }

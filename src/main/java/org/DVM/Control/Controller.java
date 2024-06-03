@@ -42,35 +42,39 @@ public class Controller {
         // Display MainUI in a new thread
 
         Thread thread = new Thread(() -> {
-            communicationManager.startServer((MessageCallback message) -> {
-                Message message1 = null;
-                HashMap<String, String> msg_content = new HashMap<>();
-                switch (message1.msg_type) {
+            communicationManager.startServer(new MessageCallback() {
+                @Override
+                public void onMessageReceived(Message message) {
+                    System.out.println("Received message at Controller: " + message.msg_type + " from " + message.src_id);
 
-                    case req_stock -> {
-                        Item item = checkStock(message1);
+                    HashMap<String, String> msg_content = new HashMap<>();
+                    switch (message.msg_type) {
+
+                        case req_stock -> {
+                            Item item = checkStock(message);
 
 
-                        msg_content.put("item_code", String.valueOf(item.code));
-                        msg_content.put("item_num", String.valueOf(item.quantity));
-                        msg_content.put("coor_x", String.valueOf(our_x));
-                        msg_content.put("coor_y", String.valueOf(our_y));
+                            msg_content.put("item_code", String.valueOf(item.code));
+                            msg_content.put("item_num", String.valueOf(item.quantity));
+                            msg_content.put("coor_x", String.valueOf(our_x));
+                            msg_content.put("coor_y", String.valueOf(our_y));
 
-                        Message msg_info = new Message(MessageType.resp_stock, src_id, message1.src_id, msg_content);
-                        Message returnMsg = communicationManager.createMessage(msg_info);
-                        communicationManager.sendMessageToClient(returnMsg);
-                    }
+                            Message msg_info = new Message(MessageType.resp_stock, src_id, message.src_id, msg_content);
+                            Message returnMsg = communicationManager.createMessage(msg_info);
+                            communicationManager.sendMessageToClient(returnMsg);
+                        }
 
-                    case req_prepay -> {
-                        boolean availabilty = checkPrepayAvailability(message1);
+                        case req_prepay -> {
+                            boolean availabilty = checkPrepayAvailability(message);
 
-                        msg_content.put("item_code", message1.msg_content.get("item_code"));
-                        msg_content.put("item_num", message1.msg_content.get("item_num"));
-                        msg_content.put("availability", availabilty ? "T" : "F");
+                            msg_content.put("item_code", message.msg_content.get("item_code"));
+                            msg_content.put("item_num", message.msg_content.get("item_num"));
+                            msg_content.put("availability", availabilty ? "T" : "F");
 
-                        Message msg_info = new Message(MessageType.resp_stock, src_id, message1.src_id, msg_content);
-                        Message returnMsg = communicationManager.createMessage(msg_info);
-                        communicationManager.sendMessageToClient(returnMsg);
+                            Message msg_info = new Message(MessageType.resp_stock, src_id, message.src_id, msg_content);
+                            Message returnMsg = communicationManager.createMessage(msg_info);
+                            communicationManager.sendMessageToClient(returnMsg);
+                        }
                     }
                 }
             });

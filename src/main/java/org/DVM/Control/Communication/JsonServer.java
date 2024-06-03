@@ -31,7 +31,6 @@ public class JsonServer {
 //                Message received = service.receiveMessage(Message.class);
                 service.handleClient(clientSocket, callback);
 
-                service.stop();
             }
         } catch (Exception e) {
             System.out.println("Server exception: " + e.getMessage());

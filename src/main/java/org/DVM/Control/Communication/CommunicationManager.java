@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 public class CommunicationManager {
 
     private JsonServer server = new JsonServer(1234);
+    private JsonClient client = new JsonClient("localhost", 1234);
 
     public CommunicationManager() {
 
@@ -23,12 +24,14 @@ public class CommunicationManager {
 
     public void sendMessageToClient(Message message) { //상대 client 가 보낸 요청에 대한 응답을 보낼때
 
-        System.out.println(message);
+        System.out.println("sendMessageToClient ");
+        server.sendMessage(message);
     }
 
     public void sendMessageToServer(Message message) { //상대 server 에게 요청을 보낼때
 
-        System.out.println(message);
+        System.out.println("sendMessageToServer");
+        client.sendMessage(message);
     }
 
     private Message processMessage(String JSON) {
