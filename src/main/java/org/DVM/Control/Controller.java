@@ -126,9 +126,8 @@ public class Controller {
         } else {
             System.out.println("Item is not available");
 
-            String dst_id = "Team";
-
-            for (int i = 1; i < 9; i++) {
+            for (int i = 1; i <= 9; i++) {
+                String dst_id = "Team";
                 if (i == 4)
                     continue;
                 String id = String.valueOf(i);
@@ -152,6 +151,7 @@ public class Controller {
 
             uiManager.display("LocationInfoUI", stock.itemList(), item, minDVM, null);
             // 이후 prepay
+            // prepay 구현을 아직 안함 ㅋㅋ
 
         }
     }

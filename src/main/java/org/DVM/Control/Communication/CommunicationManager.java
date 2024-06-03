@@ -5,13 +5,18 @@ import java.util.function.Consumer;
 public class CommunicationManager {
 
     private JsonServer server = new JsonServer(1234);
-    private JsonClient client = new JsonClient("192.168.66.139", 1234);
+    private JsonClient client = new JsonClient("192.168.219.111", 1234);
 
     public CommunicationManager() {
+        startClient();
     }
 
     public void startServer(MessageCallback callback) {
         server.startServer(callback);
+    }
+
+    public void startClient() {
+        client.startClient();
     }
 
     public Message createMessage(Message msg_info) {
