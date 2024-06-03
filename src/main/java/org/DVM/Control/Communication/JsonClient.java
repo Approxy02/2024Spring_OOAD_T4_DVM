@@ -9,6 +9,7 @@ public class JsonClient {
     private int port;
 
     private SocketService service;
+    private Socket socket;
 
     public JsonClient(String host, int port) {
         this.host = host;
@@ -16,7 +17,8 @@ public class JsonClient {
     }
 
     public void startClient() {
-        try (Socket socket = new Socket(host, port)) {
+        try {
+            socket = new Socket(host, port);
             service = new JsonSocketService(socket);
             service.start();
         } catch (Exception e) {
@@ -25,8 +27,9 @@ public class JsonClient {
         }
     }
 
-    public void sendMessage(Message message) {
-        service.sendMessage(message);
+    public Message sendMessage(Message msg) {
+        service.sendMessage(msg);
+        return service.receiveMessage(Message.class);
     }
 
     public void stopClient() {

@@ -14,22 +14,24 @@ public class JsonServer {
         this.port = port;
     }
 
-    public Consumer<Message> callback;
+//    public Consumer<Message> callback;
 
-    public void startServer() {
+    public void startServer(MessageCallback callback) {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server Listening On Port : " + port);
 
             Socket clientSocket = serverSocket.accept();
 
             service = new JsonSocketService(clientSocket);
-            service.start();
+
 
             while (true) {
+                service.start();
                 // 클라이언트로부터 메시지를 받습니다.
-                Message received = service.receiveMessage(Message.class);
+//                Message received = service.receiveMessage(Message.class);
+                service.handleClient(clientSocket, callback);
 
-                if(received != null) callback.accept(received);
+                service.stop();
             }
         } catch (Exception e) {
             System.out.println("Server exception: " + e.getMessage());

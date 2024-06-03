@@ -10,10 +10,8 @@ public class CommunicationManager {
 
     }
 
-    public void startServer(Consumer<Message> callback) {
-        server.callback = callback;
-
-        server.startServer();
+    public void startServer(MessageCallback callback) {
+        server.startServer(callback);
     }
 
     public Message createMessage(Message msg_info) {
