@@ -1,5 +1,5 @@
 1111 check 40000
 2222 check 40000
 3333 check 40000
-4444 check 40000
+4444 check 300
 5555 credit 0
