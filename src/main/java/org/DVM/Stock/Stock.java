@@ -37,7 +37,12 @@ public class Stock {
                 if (isPrePayed) {
                     item.prePayed_amount += item_num;
                 } else {
-                    item.quantity -= item_num;
+                    if(Objects.equals(vCode, "null")) {
+                        item.quantity -= item_num;
+                    }else{
+                        item.prePayed_amount -= item_num;
+                    }
+
                 }
             }
         }

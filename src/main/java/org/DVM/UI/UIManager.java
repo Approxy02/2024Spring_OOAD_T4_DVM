@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class UIManager extends JFrame {
-    String title = "Distributed Vending Machine";
+    String title = "[T4] Distributed Vending Machine";
 
     //region <UI 객체 정의>
 
@@ -30,7 +30,7 @@ public class UIManager extends JFrame {
             // Title Panel
             JPanel titlePanel = new JPanel();
             JLabel titleLabel = new JLabel(title, JLabel.CENTER);
-            
+
             titleLabel.setFont(new Font(titleLabel.getFont().getFontName(), Font.BOLD, 18));
             titlePanel.add(titleLabel);
 
@@ -262,7 +262,7 @@ public class UIManager extends JFrame {
     }
 
     //endregion
- 
+
     //region <UI 실제 구현>
     private Item item = new Item("null", 0, 0, 0);
 
@@ -452,6 +452,10 @@ public class UIManager extends JFrame {
     }
 
     private class UIPrePayment1 extends UIPanel {
+        private JLabel categoryValue;
+        private JLabel quantityValue;
+        private JLabel locationValue;
+
         public UIPrePayment1() {
             // Item Info Panel
             JPanel itemInfoPanel = new JPanel();
@@ -460,15 +464,15 @@ public class UIManager extends JFrame {
 
             JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
             categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            JLabel categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
+            categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
 
             JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
             quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            JLabel quantityValue = new JLabel("5", JLabel.CENTER);
+            quantityValue = new JLabel("5", JLabel.CENTER);
 
             JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
             locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            JLabel locationValue = new JLabel("(5, 5)", JLabel.CENTER);
+            locationValue = new JLabel("(5, 5)", JLabel.CENTER);
 
             itemInfoPanel.add(categoryLabel);
             itemInfoPanel.add(categoryValue);
@@ -495,19 +499,7 @@ public class UIManager extends JFrame {
             this.add(paymentPanel, BorderLayout.SOUTH);
 
             paymentButton.addActionListener(e -> {
-                // Handle payment
-                paymentButton.setEnabled(false);
-                cardNumberField.setEnabled(false);
-                JOptionPane.showMessageDialog(this, "결제중...");
-                // Simulate payment delay
-                Timer timer = new Timer(2000, evt -> {
-                    paymentButton.setEnabled(true);
-                    cardNumberField.setEnabled(true);
-                    JOptionPane.showMessageDialog(this, "결제가 완료되었습니다!");
-                    showUI("PrepaymentUI_2");
-                });
-                timer.setRepeats(false);
-                timer.start();
+                process(cardNumberField.getText());
             });
         }
     }
@@ -553,7 +545,11 @@ public class UIManager extends JFrame {
 
             this.add(confirmationPanel, BorderLayout.SOUTH);
 
-            receiveCodeButton.addActionListener(e -> showUI("MainUI"));
+            receiveCodeButton.addActionListener(e -> {
+                synchronized (UIManager.this) {
+                    UIManager.this.notify(); // Notify waiting thread
+                }
+            });
         }
     }
 
@@ -595,7 +591,11 @@ public class UIManager extends JFrame {
 
             this.add(buttonPanel, BorderLayout.SOUTH);
 
-            backButton.addActionListener(e -> showUI("MainUI"));
+            backButton.addActionListener(e -> {
+                synchronized (UIManager.this) {
+                    UIManager.this.notify(); // Notify waiting thread
+                }
+            });
         }
     }
 
@@ -605,8 +605,14 @@ public class UIManager extends JFrame {
 
         @Override
         protected void processDVM(OtherDVM dvm) {
-            nameValue.setText(dvm.name);
-            locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
+            if (dvm == null){
+                nameValue.setText("재고를 보유중인 자판기가");
+                locationValue.setText("존재하지 않습니다.");
+            }
+            else {
+                nameValue.setText(dvm.name);
+                locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
+            }
         }
 
         public UILocationInfo() {
@@ -640,7 +646,11 @@ public class UIManager extends JFrame {
 
             this.add(buttonPanel, BorderLayout.SOUTH);
 
-            nextButton.addActionListener(e -> showUI("MainUI"));
+            nextButton.addActionListener(e -> {
+                synchronized (UIManager.this) {
+                    UIManager.this.notify(); // Notify waiting thread
+                }
+            });
         }
     }
 

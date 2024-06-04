@@ -121,7 +121,7 @@ public class Controller {
             System.out.println("Card Info : " + cardInfo);
             Card card = new Card(cardInfo, null, item_num * 100); // 넘겨주는 balance가 결제할 금액
 
-            insertCard(card);
+            insertCard(card, false);
 
         } else {
             System.out.println("Item is not available");
@@ -130,6 +130,7 @@ public class Controller {
                 String dst_id = "Team";
                 if (i == 4)
                     continue;
+
                 String id = String.valueOf(i);
                 dst_id = dst_id + id;
 
@@ -150,33 +151,94 @@ public class Controller {
             minDistance();
 
             uiManager.display("LocationInfoUI", stock.itemList(), item, minDVM, null);
+            String garbage = uiManager.waitForInputString();
             // 이후 prepay
             // prepay 구현을 아직 안함 ㅋㅋ
+            if(minDVM != null) {
+                uiManager.display("PrepaymentUI_1", stock.itemList(), item, minDVM, null);
 
+                String cardInfo = uiManager.waitForInputString();
+                System.out.println("Card Info : " + cardInfo);
+                Card card = new Card(cardInfo, null, item_num * 100);
+
+                insertCard(card, true);
+            }
+            else{
+                uiManager.displayError("주변에 다른 DVM이 없습니다. 다시 시도해주세요");
+
+                uiManager.display("MainUI", null, null, null, null);
+
+                mainAction();
+            }
         }
     }
 
-    public void insertCard(Card card) {
+    public void insertCard(Card card, boolean isPrepay) {
 //        CardReader cardReader = new CardReader();
         Card cardInfo = cardReader.getCardInfo(card);
 
 //        PaymentManager paymentManager = new PaymentManager();
-        if (paymentManager.pay(cardInfo, cardInfo.balance)) {
-            System.out.println("Payment success");
-            uiManager.display("PaymentUI_2", stock.itemList(), item, null, null);
-            String garbage = uiManager.waitForInputString();
+        if(!isPrepay) {
+            if (paymentManager.pay(cardInfo, cardInfo.balance)) {
+                System.out.println("Payment success");
+                uiManager.display("PaymentUI_2", stock.itemList(), item, null, null);
+                String garbage = uiManager.waitForInputString();
 
-            dispenseItems(item.code, item.quantity);
+                dispenseItems(item.code, item.quantity, null);
 
-        } else {
-            System.out.println("Payment failed");
+            } else {
+                System.out.println("Payment failed");
 
-            uiManager.displayError("결제에 실패했습니다! 다시 시도해주세요");
+                uiManager.displayError("결제에 실패했습니다! 다시 시도해주세요");
 
-            uiManager.display("MainUI", null, null, null, null);
+                uiManager.display("MainUI", null, null, null, null);
 
-            mainAction();
+                mainAction();
 
+            }
+        }
+        else{
+            HashMap<String, String> msg_content = new HashMap<>();
+            msg_content.put("item_code", String.valueOf(item.code));
+            msg_content.put("item_num", String.valueOf(item.quantity));
+            String vCode = verificationManager.createVerificationCode();
+            msg_content.put("cert_code", vCode);
+
+            Message returnMsg = communicationManager.requestPrepayToDVM(new Message(MessageType.req_prepay, src_id, minDVM.name, msg_content));
+
+            boolean prePayAvailability = returnMsg.msg_content.get("availability").equals("T");
+
+            if (prePayAvailability && paymentManager.pay(cardInfo, cardInfo.balance)) {
+                System.out.println("Payment success");
+                uiManager.display("PrepaymentUI_2", stock.itemList(), item, minDVM, null);
+                String garbage = uiManager.waitForInputString();
+
+                uiManager.display("VerificationCodeUI", stock.itemList(), item, minDVM, vCode);
+                garbage = uiManager.waitForInputString();
+
+                uiManager.display("DispenseResultUI", stock.itemList(), item, null, null);
+                garbage = uiManager.waitForInputString();
+
+                uiManager.display("MainUI", null, null, null, null);
+
+                mainAction();
+
+            } else {
+
+                if(!prePayAvailability) {
+                    uiManager.displayError("재고가 부족합니다");
+                    selectItems(item.code, item.quantity);
+                }
+                else{
+                    uiManager.displayError("결제에 실패했습니다! 다시 시도해주세요");
+
+                    uiManager.display("MainUI", null, null, null, null);
+
+                    mainAction();
+                }
+
+
+            }
         }
 
     }
@@ -185,7 +247,7 @@ public class Controller {
         if (verificationManager.verifyVCode(vCode)) {
             Item dis = verificationManager.getItems(vCode);
             verificationManager.removeVCode(vCode);
-            dispenseItems(dis.code, dis.quantity);
+            dispenseItems(dis.code, dis.quantity, vCode);
         } else {
             uiManager.displayError("인증코드를 다시 입력하세요");
 
@@ -200,7 +262,15 @@ public class Controller {
         int item_code = Integer.parseInt(msg_info.msg_content.get("item_code"));
         int item_num = Integer.parseInt(msg_info.msg_content.get("item_num"));
 
-        return stock.checkStock(item_code, item_num);
+        boolean prepayAvailabilty = stock.checkStock(item_code, item_num);
+
+        if (prepayAvailabilty) {
+            String vCode = msg_info.msg_content.get("cert_code");
+            verificationManager.saveVCode(vCode, item_code, item_num);
+            stock.updateStock(item_code, item_num, true, vCode);
+        }
+
+        return prepayAvailabilty;
     }
 
     public Item checkStock(Message msg_info) {
@@ -217,6 +287,7 @@ public class Controller {
     }
 
     public void minDistance() {
+        minDVM = null;
         float min = 10000000;
         for (OtherDVM dvm : otherDVMs) {
             float distance = calculateDistance(dvm.coor_x, dvm.coor_y);
@@ -226,10 +297,11 @@ public class Controller {
             }
         }
 
-        System.out.println("Nearest DVM is " + minDVM.name + " at " + minDVM.coor_x + ", " + minDVM.coor_y);
+        if (minDVM != null)
+            System.out.println("Nearest DVM is " + minDVM.name + " at " + minDVM.coor_x + ", " + minDVM.coor_y);
     }
 
-    public void dispenseItems(int item_code, int item_num) {
+    public void dispenseItems(int item_code, int item_num, String vCode) {
         System.out.println("Item dispensed");
         Item dis = stock.getItems(item_code);
         item = new Item(dis.name, item_code, item_num, 0);
@@ -237,7 +309,7 @@ public class Controller {
 
         String garbage = uiManager.waitForInputString();
 
-        stock.updateStock(item_code, item_num, false, null);
+        stock.updateStock(item_code, item_num, false, vCode);
 
         uiManager.display("MainUI", null, null, null, null);
 
