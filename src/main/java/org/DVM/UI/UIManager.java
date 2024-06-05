@@ -23,8 +23,8 @@ public class UIManager extends JFrame {
 
     //region <UI 객체 정의>
 
-    private class UIPanel extends JPanel{
-        public UIPanel(){
+    private class UIPanel extends JPanel {
+        public UIPanel() {
             super(new BorderLayout());
 
             // Title Panel
@@ -37,10 +37,17 @@ public class UIManager extends JFrame {
             this.add(titlePanel, BorderLayout.NORTH);
         }
 
-        protected void processItems(ArrayList<Item> items) {}
-        protected void processItem(Item item) {}
-        protected void processDVM(OtherDVM dvm) {}
-        protected void processVCode(String vCode) {}
+        protected void processItems(ArrayList<Item> items) {
+        }
+
+        protected void processItem(Item item) {
+        }
+
+        protected void processDVM(OtherDVM dvm) {
+        }
+
+        protected void processVCode(String vCode) {
+        }
 
         public final void processInput(ArrayList<Item> items, Item item, OtherDVM dvm, String vCode) {
             this.processItems(items);
@@ -80,7 +87,9 @@ public class UIManager extends JFrame {
             }
         }
 
-        public String getPlaceHolder() { return this.placeHolder; }
+        public String getPlaceHolder() {
+            return this.placeHolder;
+        }
 
         public void setPlaceHolder(String placeHolder) {
             this.placeHolder = placeHolder;
@@ -95,9 +104,13 @@ public class UIManager extends JFrame {
             }
         }
 
-        public int getMaxLength() { return this.maxLength; }
+        public int getMaxLength() {
+            return this.maxLength;
+        }
 
-        public void setMaxLength(int maxLength) { this.maxLength = maxLength; }
+        public void setMaxLength(int maxLength) {
+            this.maxLength = maxLength;
+        }
 
         private void showPlaceHolder() {
             super.setDocument(this.placeHolderDocument);
@@ -120,14 +133,14 @@ public class UIManager extends JFrame {
         }
 
         public UITextField(String text, String placeHolder) {
-            setText(text); setPlaceHolder(placeHolder);
+            setText(text);
+            setPlaceHolder(placeHolder);
 
             this.setRegexFilter(".*");
 
-            if(this.document.getLength() == 0) {
+            if (this.document.getLength() == 0) {
                 this.showPlaceHolder();
-            }
-            else{
+            } else {
                 this.hidePlaceHolder();
             }
 
@@ -139,20 +152,20 @@ public class UIManager extends JFrame {
 
                 @Override
                 public void focusLost(FocusEvent e) {
-                    if(document.getLength() == 0) showPlaceHolder();
+                    if (document.getLength() == 0) showPlaceHolder();
                 }
             });
         }
 
         public void setRegexFilter(String regex) {
-            ((AbstractDocument)this.document).setDocumentFilter(new DocumentFilter() {
+            ((AbstractDocument) this.document).setDocumentFilter(new DocumentFilter() {
                 @Override
                 public void replace(FilterBypass fb, int offset, int length, String string, AttributeSet attrs) throws BadLocationException {
                     if (string == null) {
                         return;
                     }
 
-                    if(document.getLength() + string.length() - length <= getMaxLength() || getMaxLength() < 0) {
+                    if (document.getLength() + string.length() - length <= getMaxLength() || getMaxLength() < 0) {
                         if (string.matches(regex)) {
                             super.replace(fb, offset, length, string, attrs);
                         }
@@ -166,7 +179,7 @@ public class UIManager extends JFrame {
             });
         }
 
-        public void setNumericOnly(){
+        public void setNumericOnly() {
             this.setRegexFilter("\\d+");
         }
     }
@@ -181,17 +194,17 @@ public class UIManager extends JFrame {
 
     private String mainDisplayString = null;
 
-    private void showUI(String name){
+    private void showUI(String name) {
         layout.show(showPanel, name);
     }
 
     private void process(String... args) {
         mainDisplayString = "";
 
-        for (int i = 0; i < args.length; i++){
+        for (int i = 0; i < args.length; i++) {
             mainDisplayString += args[i];
 
-            if(i < args.length - 1) mainDisplayString += " ";
+            if (i < args.length - 1) mainDisplayString += " ";
         }
 
         synchronized (this) {
@@ -218,7 +231,7 @@ public class UIManager extends JFrame {
         UIPanels.put("VerificationCodeUI", new UIVerificationCode());
         UIPanels.put("DispenseResultUI", new UIDispenseResult());
 
-        for (var entry : UIPanels.entrySet()){
+        for (var entry : UIPanels.entrySet()) {
             showPanel.add(entry.getValue(), entry.getKey());
         }
 
@@ -230,7 +243,7 @@ public class UIManager extends JFrame {
     public void display(String UIType, ArrayList<Item> items, Item item, OtherDVM dvm, String vCode) {
         UIPanel panel = UIPanels.get(UIType);
 
-        if(panel != null){
+        if (panel != null) {
             panel.processInput(items, item, dvm, vCode);
 
             showUI(UIType);
@@ -239,7 +252,7 @@ public class UIManager extends JFrame {
         }
     }
 
-    public void displayError(String msg){
+    public void displayError(String msg) {
         JOptionPane.showMessageDialog(null, msg);
     }
 
@@ -289,7 +302,7 @@ public class UIManager extends JFrame {
             itemGridPanel.repaint();
         }
 
-        public UIMain(){
+        public UIMain() {
             super();
 
             itemGridPanel.setLayout(new GridLayout(4, 5));
@@ -456,6 +469,17 @@ public class UIManager extends JFrame {
         private JLabel quantityValue;
         private JLabel locationValue;
 
+        @Override
+        protected void processItem(Item item) {
+            categoryValue.setText(item.name + "(" + item.code + ")");
+            quantityValue.setText(String.valueOf(item.quantity));
+        }
+
+        @Override
+        protected void processDVM(OtherDVM dvm) {
+            locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
+        }
+
         public UIPrePayment1() {
             // Item Info Panel
             JPanel itemInfoPanel = new JPanel();
@@ -505,6 +529,21 @@ public class UIManager extends JFrame {
     }
 
     private class UIPrePayment2 extends UIPanel {
+        private JLabel categoryValue;
+        private JLabel quantityValue;
+        private JLabel locationValue;
+
+        @Override
+        protected void processItem(Item item) {
+            categoryValue.setText(item.name + "(" + item.code + ")");
+            quantityValue.setText(String.valueOf(item.quantity));
+        }
+
+        @Override
+        protected void processDVM(OtherDVM dvm) {
+            locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
+        }
+
         public UIPrePayment2() {
             // Item Info Panel
             JPanel itemInfoPanel = new JPanel();
@@ -513,15 +552,15 @@ public class UIManager extends JFrame {
 
             JLabel categoryLabel = new JLabel("종류", JLabel.CENTER);
             categoryLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            JLabel categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
+            categoryValue = new JLabel("콜라(01)", JLabel.CENTER);
 
             JLabel quantityLabel = new JLabel("수량", JLabel.CENTER);
             quantityLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            JLabel quantityValue = new JLabel("5", JLabel.CENTER);
+            quantityValue = new JLabel("5", JLabel.CENTER);
 
             JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
             locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            JLabel locationValue = new JLabel("(5, 5)", JLabel.CENTER);
+            locationValue = new JLabel("(5, 5)", JLabel.CENTER);
 
             itemInfoPanel.add(categoryLabel);
             itemInfoPanel.add(categoryValue);
@@ -554,6 +593,26 @@ public class UIManager extends JFrame {
     }
 
     private class UIVerificationCode extends UIPanel {
+        private JLabel nameValue;
+        private JLabel locationValue;
+        private JLabel codeValue;
+
+        @Override
+        protected void processVCode(String vCode) {
+            codeValue.setText(vCode);
+        }
+
+        @Override
+        protected void processDVM(OtherDVM dvm) {
+            if (dvm == null) {
+                nameValue.setText("재고를 보유중인 자판기가");
+                locationValue.setText("존재하지 않습니다.");
+            } else {
+                nameValue.setText(dvm.name);
+                locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
+            }
+        }
+
         public UIVerificationCode() {
             // Info Panel
             JPanel infoPanel = new JPanel();
@@ -562,15 +621,15 @@ public class UIManager extends JFrame {
 
             JLabel nameLabel = new JLabel("DVM 이름", JLabel.CENTER);
             nameLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            JLabel nameValue = new JLabel("Team5", JLabel.CENTER);
+            nameValue = new JLabel("Team5", JLabel.CENTER);
 
             JLabel locationLabel = new JLabel("위치", JLabel.CENTER);
             locationLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            JLabel locationValue = new JLabel("(x, y)", JLabel.CENTER);
+            locationValue = new JLabel("(x, y)", JLabel.CENTER);
 
             JLabel codeLabel = new JLabel("인증코드", JLabel.CENTER);
             codeLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            JLabel codeValue = new JLabel("AD13254D33", JLabel.CENTER);
+            codeValue = new JLabel("AD13254D33", JLabel.CENTER);
 
             infoPanel.add(nameLabel);
             infoPanel.add(nameValue);
@@ -605,11 +664,10 @@ public class UIManager extends JFrame {
 
         @Override
         protected void processDVM(OtherDVM dvm) {
-            if (dvm == null){
+            if (dvm == null) {
                 nameValue.setText("재고를 보유중인 자판기가");
                 locationValue.setText("존재하지 않습니다.");
-            }
-            else {
+            } else {
                 nameValue.setText(dvm.name);
                 locationValue.setText("(" + dvm.coor_x + ", " + dvm.coor_y + ")");
             }

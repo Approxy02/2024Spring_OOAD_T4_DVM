@@ -16,18 +16,17 @@ public class JsonClient {
         this.port = port;
     }
 
-    public void startClient() {
-        try {
-            socket = new Socket(host, port);
-            service = new JsonSocketService(socket);
-            service.start();
-        } catch (Exception e) {
-            System.out.println("Client Exception: " + e.getMessage());
-            e.printStackTrace();
-        }
+    public void startClient() throws Exception {
+
+        socket = new Socket(host, port);
+        socket.setSoTimeout(3000);
+        service = new JsonSocketService(socket);
+        service.start();
+
     }
 
     public Message sendMessage(Message msg) {
+        System.out.println("Send Message: ");
         service.sendMessage(msg);
         return service.receiveMessage(Message.class);
     }

@@ -20,16 +20,19 @@ public class JsonServer {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server Listening On Port : " + port);
 
-            Socket clientSocket = serverSocket.accept();
-
-            service = new JsonSocketService(clientSocket);
-
 
             while (true) {
+
+                Socket clientSocket = serverSocket.accept();
+
+                service = new JsonSocketService(clientSocket);
+
                 service.start();
                 // 클라이언트로부터 메시지를 받습니다.
 //                Message received = service.receiveMessage(Message.class);
                 service.handleClient(clientSocket, callback);
+
+                service.stop();
 
             }
         } catch (Exception e) {

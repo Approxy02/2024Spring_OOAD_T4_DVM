@@ -36,16 +36,22 @@ public class CommunicationManager {
 
         JsonClient client = clients.get(message.dst_id);
 
-        if(client == null) {
+        Message result = null;
+
+        if (client == null) {
             System.out.println("Client Not Found");
             return null;
         }
 
-        client.startClient();
+        try {
+            client.startClient();
 
-        Message result = client.sendMessage(message);
+            result = client.sendMessage(message);
 
-        client.stopClient();
+            client.stopClient();
+        } catch (Exception e) {
+            System.out.println("Client Exception: " + e.getMessage());
+        }
 
         return result;
     }

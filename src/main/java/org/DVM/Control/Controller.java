@@ -127,7 +127,7 @@ public class Controller {
         } else {
             System.out.println("Item is not available");
 
-            otherDVMs = null;
+            otherDVMs = new ArrayList<OtherDVM>();
 
             for (int i = 1; i <= 9; i++) {
                 String dst_id = "Team";
@@ -145,9 +145,11 @@ public class Controller {
                 Message msg_info = new Message(MessageType.req_stock, src_id, dst_id, msg_content);
                 Message returnMsg = communicationManager.requestCheckStockToDVM(msg_info);
 
-                if (returnMsg!= null && Integer.parseInt(returnMsg.msg_content.get("item_num")) >= item.quantity) {
+                if (returnMsg != null)
+                    System.out.println("Received message from " + dst_id + " : " + returnMsg.msg_content.get("item_code") + " " + returnMsg.msg_content.get("item_num"));
+
+                if (returnMsg != null && Integer.parseInt(returnMsg.msg_content.get("item_num")) >= item.quantity) {
                     otherDVMs.add(new OtherDVM(dst_id, Integer.parseInt(returnMsg.msg_content.get("coor_x")), Integer.parseInt(returnMsg.msg_content.get("coor_y"))));
-//                   calculateDistance(Integer.parseInt(returnMsg.msg_content.get("coor_x")), Integer.parseInt(returnMsg.msg_content.get("coor_y")));
                 }
             }
 
@@ -208,6 +210,15 @@ public class Controller {
             msg_content.put("cert_code", vCode);
 
             Message returnMsg = communicationManager.requestPrepayToDVM(new Message(MessageType.req_prepay, src_id, minDVM.name, msg_content));
+
+            if (returnMsg == null) {
+                uiManager.displayError("DVM과 통신에 실패했습니다. 다시 시도해주세요");
+
+                uiManager.display("MainUI", null, null, null, null);
+
+                mainAction();
+                return;
+            }
 
             boolean prePayAvailability = returnMsg.msg_content.get("availability").equals("T");
 
