@@ -1,34 +1,23 @@
 package org.DVM.Control.Communication;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 public class CommunicationManager {
 
     private JsonServer server = new JsonServer(1234);
-    private ArrayList<JsonClient> clients = new ArrayList<>();
-//    private JsonClient client = new JsonClient("localhost", 1234);
+    private HashMap<String, JsonClient> clients = new HashMap<String, JsonClient>();
 
     public CommunicationManager() {
-        JsonClient client1 = new JsonClient("192.168.182.99", 1234);
-        JsonClient client2 = new JsonClient("192.168.181.226", 1234);
-        JsonClient client3 = new JsonClient("localhost", 1234);
-        JsonClient client4 = null;
-        clients.add(client1);
-        clients.add(client2);
-        clients.add(client3);
-        clients.add(client4);
-        startClient();
+        clients.put("Team1", new JsonClient("192.168.181.226", 1234));
+        clients.put("Team2", new JsonClient("192.168.181.226", 1234));
+        clients.put("Team3", new JsonClient("192.168.181.226", 1234));
+        clients.put("Team4", new JsonClient("192.168.181.226", 1234));
     }
 
     public void startServer(MessageCallback callback) {
         server.startServer(callback);
-    }
-
-    public void startClient() {
-        for (JsonClient client : clients) {
-            client.startClient();
-        }
     }
 
     public Message createMessage(Message msg_info) {
@@ -44,15 +33,16 @@ public class CommunicationManager {
     public Message sendMessageToServer(Message message) { //상대 server 에게 요청을 보낼때
 
         System.out.println("Request Message To Server");
-        String dst_id = message.dst_id;
-        int id = Integer.parseInt(dst_id.charAt(dst_id.length() - 1) + "");
 
-        JsonClient client = clients.get(id - 1);
+        JsonClient client = clients.get(message.dst_id);
 
-        if(client != null)
-            return client.sendMessage(message);
+        client.startClient();
 
-        return null;
+        Message result = client.sendMessage(message);
+
+        client.stopClient();
+
+        return result;
     }
 
     public Message requestCheckStockToDVM(Message msg_info) {

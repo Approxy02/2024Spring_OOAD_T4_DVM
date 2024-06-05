@@ -23,9 +23,9 @@ public class Controller {
     private CardReader cardReader;
     private ArrayList<OtherDVM> otherDVMs = new ArrayList<OtherDVM>();
     private Item item;
-    private final String src_id = "Team4";
-    private final int our_x = 40;
-    private final int our_y = 40;
+    private final String src_id = "Team2";
+    private final int our_x = 50;
+    private final int our_y = 10;
     private OtherDVM minDVM = null;
 
     public Controller() {
