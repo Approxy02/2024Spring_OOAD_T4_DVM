@@ -23,9 +23,10 @@ public class Controller {
     private CardReader cardReader;
     private ArrayList<OtherDVM> otherDVMs = new ArrayList<OtherDVM>();
     private Item item;
-    private final String src_id = "Team2";
-    private final int our_x = 50;
-    private final int our_y = 10;
+    private final String src_id = "Team4";
+    private final int teamNo = 4;
+    private final int our_x = 40;
+    private final int our_y = 40;
     private OtherDVM minDVM = null;
 
     public Controller() {
@@ -126,9 +127,11 @@ public class Controller {
         } else {
             System.out.println("Item is not available");
 
+            otherDVMs = null;
+
             for (int i = 1; i <= 9; i++) {
                 String dst_id = "Team";
-                if (i == 4)
+                if (i == teamNo)
                     continue;
 
                 String id = String.valueOf(i);
@@ -142,7 +145,7 @@ public class Controller {
                 Message msg_info = new Message(MessageType.req_stock, src_id, dst_id, msg_content);
                 Message returnMsg = communicationManager.requestCheckStockToDVM(msg_info);
 
-                if (Integer.parseInt(returnMsg.msg_content.get("item_num")) >= item.quantity) {
+                if (returnMsg!= null && Integer.parseInt(returnMsg.msg_content.get("item_num")) >= item.quantity) {
                     otherDVMs.add(new OtherDVM(dst_id, Integer.parseInt(returnMsg.msg_content.get("coor_x")), Integer.parseInt(returnMsg.msg_content.get("coor_y"))));
 //                   calculateDistance(Integer.parseInt(returnMsg.msg_content.get("coor_x")), Integer.parseInt(returnMsg.msg_content.get("coor_y")));
                 }

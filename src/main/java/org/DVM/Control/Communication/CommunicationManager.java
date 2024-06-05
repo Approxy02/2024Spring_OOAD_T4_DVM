@@ -11,9 +11,9 @@ public class CommunicationManager {
 
     public CommunicationManager() {
         clients.put("Team1", new JsonClient("192.168.181.226", 1234));
-        clients.put("Team2", new JsonClient("192.168.181.226", 1234));
-        clients.put("Team3", new JsonClient("192.168.181.226", 1234));
-        clients.put("Team4", new JsonClient("192.168.181.226", 1234));
+        clients.put("Team2", new JsonClient("192.168.182.99", 1234));
+        clients.put("Team3", new JsonClient("", 1234));
+        clients.put("Team4", new JsonClient("", 1234));
     }
 
     public void startServer(MessageCallback callback) {
@@ -35,6 +35,11 @@ public class CommunicationManager {
         System.out.println("Request Message To Server");
 
         JsonClient client = clients.get(message.dst_id);
+
+        if(client == null) {
+            System.out.println("Client Not Found");
+            return null;
+        }
 
         client.startClient();
 
