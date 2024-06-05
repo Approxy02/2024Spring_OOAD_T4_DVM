@@ -17,7 +17,7 @@ public class CommunicationManager {
     }
 
     public void startServer(MessageCallback callback) {
-        server.startServer(callback);
+        server.start(callback);
     }
 
     public Message createMessage(Message msg_info) {
@@ -44,11 +44,11 @@ public class CommunicationManager {
         }
 
         try {
-            client.startClient();
+            client.start();
 
             result = client.sendMessage(message);
 
-            client.stopClient();
+            client.stop();
         } catch (Exception e) {
             System.out.println("Client Exception: " + e.getMessage());
         }
