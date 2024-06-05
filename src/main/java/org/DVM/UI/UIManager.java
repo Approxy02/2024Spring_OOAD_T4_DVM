@@ -274,6 +274,14 @@ public class UIManager extends JFrame {
         return item;
     }
 
+    public synchronized void waitForInputVoid() {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     //endregion
 
     //region <UI 실제 구현>
@@ -515,15 +523,21 @@ public class UIManager extends JFrame {
             JLabel cardNumberLabel = new JLabel("카드 번호를 입력해주세요.");
             UITextField cardNumberField = new UITextField("", "카드번호");
             JButton paymentButton = new JButton("결제");
+            JButton gotoMain = new JButton("메인으로 돌아가기");
 
             paymentPanel.add(cardNumberLabel);
             paymentPanel.add(cardNumberField);
+            paymentPanel.add(gotoMain);
             paymentPanel.add(paymentButton);
 
             this.add(paymentPanel, BorderLayout.SOUTH);
 
             paymentButton.addActionListener(e -> {
                 process(cardNumberField.getText());
+            });
+
+            gotoMain.addActionListener(e -> {
+                process();
             });
         }
     }

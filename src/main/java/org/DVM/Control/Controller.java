@@ -163,6 +163,12 @@ public class Controller {
                 uiManager.display("PrepaymentUI_1", stock.itemList(), item, minDVM, null);
 
                 String cardInfo = uiManager.waitForInputString();
+
+                if(cardInfo.isEmpty()){
+                    uiManager.display("MainUI", null, null, null, null);
+                    mainAction();
+                }
+
                 System.out.println("Card Info : " + cardInfo);
                 Card card = new Card(cardInfo, null, item_num * 100);
 
