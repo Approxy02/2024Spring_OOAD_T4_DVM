@@ -10,14 +10,14 @@ public class PaymentManagerTest {
 
     @Test
     public void testPay() {
-        Card card = new Card("1111", "123", 0);
+        Card card = new Card("1111", "", 0);
         assertTrue(paymentManager.pay(card, 100.0f), "Payment should be successful");
         assertTrue(paymentManager.pay(card, 10.0f), "Payment should be successful");
     }
 
     @Test
     public void testPay2() {
-        Card card = new Card("4444", "123", 0);
+        Card card = new Card("4444", "", 0);
         assertFalse(paymentManager.pay(card, 400.0f), "Payment should be Failed");
         assertTrue(paymentManager.pay(card, 100.0f), "Payment should be successful");
     }

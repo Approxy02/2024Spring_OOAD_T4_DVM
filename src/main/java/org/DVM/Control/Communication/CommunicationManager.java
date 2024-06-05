@@ -11,9 +11,14 @@ public class CommunicationManager {
 
     public CommunicationManager() {
         clients.put("Team1", new JsonClient("192.168.181.226", 1234));
-        clients.put("Team2", null);
+        clients.put("Team2", new JsonClient("192.168.182.99", 1234));
         clients.put("Team3", null);
         clients.put("Team4", null);
+        clients.put("Team5", null);
+        clients.put("Team6", null);
+        clients.put("Team7", null);
+        clients.put("Team8", null);
+        clients.put("Team9", null);
     }
 
     public void startServer(MessageCallback callback) {
