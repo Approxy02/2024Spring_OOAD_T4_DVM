@@ -16,8 +16,10 @@ public class CommunicationManager {
         clients.put("Team3", null);
         clients.put("Team4", null);
         clients.put("Team5", null);
-        clients.put("Team6", new JsonClient("turtle-hwan.iptime.org", 30303));
-        clients.put("Team7", null);
+//        clients.put("Team5", new JsonClient("192.168.66.85", 11120));
+        clients.put("Team6", null);
+//        clients.put("Team7", null);
+        clients.put("Team7", new JsonClient("192.168.65.102", 8080));
         clients.put("Team8", null);
         clients.put("Team9", null);
     }

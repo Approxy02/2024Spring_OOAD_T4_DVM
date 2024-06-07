@@ -22,7 +22,7 @@ public class Controller {
     private PaymentManager paymentManager;
     private CardReader cardReader;
     private ArrayList<OtherDVM> otherDVMs = new ArrayList<OtherDVM>();
-    private Item item;
+    private Item item_g;
     private final String src_id = "Team4";
     private final int teamNo = 4;
     private final int our_x = 40;
@@ -112,11 +112,11 @@ public class Controller {
     }
 
     public void selectItems(int item_code, int item_num) {
+        Item item = new Item(stock.getItems(item_code).name, item_code, item_num, 0);
+        this.item_g = item;
         if (stock.checkStock(item_code, item_num)) {
             System.out.println("Item is available");
-            Item item = new Item(stock.getItems(item_code).name, item_code, item_num, 0);
-            this.item = item;
-            System.out.println(item);
+            System.out.println(item_g);
             uiManager.display("PaymentUI_1", stock.itemList(), item, null, null);
             String cardInfo = uiManager.waitForInputString();
             System.out.println("Card Info : " + cardInfo);
@@ -148,9 +148,6 @@ public class Controller {
                 if (returnMsg != null)
                     System.out.println("Received message from " + dst_id + " : " + returnMsg.msg_content.get("item_code") + " " + returnMsg.msg_content.get("item_num"));
 
-                if (returnMsg != null)
-                    System.out.println(returnMsg.msg_content.get("item_num") + " " + this.item.quantity);
-
                 if (returnMsg != null && Integer.parseInt(returnMsg.msg_content.get("item_num")) >= item_num) {
                     otherDVMs.add(new OtherDVM(dst_id, Integer.parseInt(returnMsg.msg_content.get("coor_x")), Integer.parseInt(returnMsg.msg_content.get("coor_y"))));
                 }
@@ -158,12 +155,12 @@ public class Controller {
 
             minDistance();
 
-            uiManager.display("LocationInfoUI", stock.itemList(), item, minDVM, null);
+            uiManager.display("LocationInfoUI", stock.itemList(), item_g, minDVM, null);
             String garbage = uiManager.waitForInputString();
             // 이후 prepay
             // prepay 구현을 아직 안함 ㅋㅋ
             if(minDVM != null) {
-                uiManager.display("PrepaymentUI_1", stock.itemList(), item, minDVM, null);
+                uiManager.display("PrepaymentUI_1", stock.itemList(), item_g, minDVM, null);
 
                 String cardInfo = uiManager.waitForInputString();
 
@@ -195,10 +192,10 @@ public class Controller {
         if(!isPrepay) {
             if (paymentManager.pay(cardInfo, cardInfo.balance)) {
                 System.out.println("Payment success");
-                uiManager.display("PaymentUI_2", stock.itemList(), item, null, null);
+                uiManager.display("PaymentUI_2", stock.itemList(), item_g, null, null);
                 String garbage = uiManager.waitForInputString();
 
-                dispenseItems(item.code, item.quantity, null);
+                dispenseItems(item_g.code, item_g.quantity, null);
 
             } else {
                 System.out.println("Payment failed");
@@ -213,8 +210,8 @@ public class Controller {
         }
         else{
             HashMap<String, String> msg_content = new HashMap<>();
-            msg_content.put("item_code", String.valueOf(item.code));
-            msg_content.put("item_num", String.valueOf(item.quantity));
+            msg_content.put("item_code", String.valueOf(item_g.code));
+            msg_content.put("item_num", String.valueOf(item_g.quantity));
             String vCode = verificationManager.createVerificationCode();
             msg_content.put("cert_code", vCode);
 
@@ -230,16 +227,17 @@ public class Controller {
             }
 
             boolean prePayAvailability = returnMsg.msg_content.get("availability").equals("T");
+            System.out.println(returnMsg.msg_content);
 
             if (prePayAvailability && paymentManager.pay(cardInfo, cardInfo.balance)) {
                 System.out.println("Payment success");
-                uiManager.display("PrepaymentUI_2", stock.itemList(), item, minDVM, null);
+                uiManager.display("PrepaymentUI_2", stock.itemList(), item_g, minDVM, null);
                 String garbage = uiManager.waitForInputString();
 
-                uiManager.display("VerificationCodeUI", stock.itemList(), item, minDVM, vCode);
+                uiManager.display("VerificationCodeUI", stock.itemList(), item_g, minDVM, vCode);
                 garbage = uiManager.waitForInputString();
 
-                uiManager.display("DispenseResultUI", stock.itemList(), item, null, null);
+                uiManager.display("DispenseResultUI", stock.itemList(), item_g, null, null);
                 garbage = uiManager.waitForInputString();
 
                 uiManager.display("MainUI", null, null, null, null);
@@ -250,7 +248,7 @@ public class Controller {
 
                 if(!prePayAvailability) {
                     uiManager.displayError("재고가 부족합니다");
-                    selectItems(item.code, item.quantity);
+                    selectItems(item_g.code, item_g.quantity);
                 }
                 else{
                     uiManager.displayError("결제에 실패했습니다! 다시 시도해주세요");
@@ -327,8 +325,8 @@ public class Controller {
     public void dispenseItems(int item_code, int item_num, String vCode) {
         System.out.println("Item dispensed");
         Item dis = stock.getItems(item_code);
-        item = new Item(dis.name, item_code, item_num, 0);
-        uiManager.display("DispenseResultUI", stock.itemList(), item, null, null);
+        item_g = new Item(dis.name, item_code, item_num, 0);
+        uiManager.display("DispenseResultUI", stock.itemList(), item_g, null, null);
 
         String garbage = uiManager.waitForInputString();
 
