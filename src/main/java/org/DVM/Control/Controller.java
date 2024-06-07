@@ -148,7 +148,10 @@ public class Controller {
                 if (returnMsg != null)
                     System.out.println("Received message from " + dst_id + " : " + returnMsg.msg_content.get("item_code") + " " + returnMsg.msg_content.get("item_num"));
 
-                if (returnMsg != null && Integer.parseInt(returnMsg.msg_content.get("item_num")) >= item.quantity) {
+                if (returnMsg != null)
+                    System.out.println(returnMsg.msg_content.get("item_num") + " " + this.item.quantity);
+
+                if (returnMsg != null && Integer.parseInt(returnMsg.msg_content.get("item_num")) >= item_num) {
                     otherDVMs.add(new OtherDVM(dst_id, Integer.parseInt(returnMsg.msg_content.get("coor_x")), Integer.parseInt(returnMsg.msg_content.get("coor_y"))));
                 }
             }
