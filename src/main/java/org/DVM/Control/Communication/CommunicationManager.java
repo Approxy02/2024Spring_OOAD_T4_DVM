@@ -10,12 +10,13 @@ public class CommunicationManager {
     private HashMap<String, JsonClient> clients = new HashMap<String, JsonClient>();
 
     public CommunicationManager() {
-        clients.put("Team1", new JsonClient("192.168.181.226", 1234));
-        clients.put("Team2", new JsonClient("192.168.182.99", 1234));
+        //new JsonClient("192.168.181.226", 1234)
+        clients.put("Team1", null);
+        clients.put("Team2", null);
         clients.put("Team3", null);
         clients.put("Team4", null);
         clients.put("Team5", null);
-        clients.put("Team6", null);
+        clients.put("Team6", new JsonClient("turtle-hwan.iptime.org", 30303));
         clients.put("Team7", null);
         clients.put("Team8", null);
         clients.put("Team9", null);
@@ -55,7 +56,7 @@ public class CommunicationManager {
 
             client.stopClient();
         } catch (Exception e) {
-            System.out.println("Client Exception: " + e.getMessage());
+            System.out.println("Client Exception at " + message.dst_id + " : " + e.getMessage());
         }
 
         return result;
