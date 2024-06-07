@@ -120,7 +120,7 @@ public class Controller {
             uiManager.display("PaymentUI_1", stock.itemList(), item, null, null);
             String cardInfo = uiManager.waitForInputString();
             System.out.println("Card Info : " + cardInfo);
-            Card card = new Card(cardInfo, null, item_num * 100); // 넘겨주는 balance가 결제할 금액
+            Card card = new Card(cardInfo, null, item_num * item.price); // 넘겨주는 balance가 결제할 금액
 
             insertCard(card, false);
 
