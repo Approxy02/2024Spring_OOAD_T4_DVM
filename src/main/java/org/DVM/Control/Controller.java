@@ -23,10 +23,10 @@ public class Controller {
     private CardReader cardReader;
     private ArrayList<OtherDVM> otherDVMs = new ArrayList<OtherDVM>();
     private Item item;
-    private final String src_id = "Team4";
-    private final int teamNo = 4;
-    private final int our_x = 40;
-    private final int our_y = 40;
+    private final String src_id = "Team1";
+    private final int teamNo = 1;
+    private final int our_x = 10;
+    private final int our_y = 10;
     private OtherDVM minDVM = null;
 
     public Controller() {
@@ -120,7 +120,7 @@ public class Controller {
             uiManager.display("PaymentUI_1", stock.itemList(), item, null, null);
             String cardInfo = uiManager.waitForInputString();
             System.out.println("Card Info : " + cardInfo);
-            Card card = new Card(cardInfo, null, item_num * 100); // 넘겨주는 balance가 결제할 금액
+            Card card = new Card(cardInfo, null, item_num * item.price); // 넘겨주는 balance가 결제할 금액
 
             insertCard(card, false);
 
