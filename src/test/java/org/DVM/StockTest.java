@@ -11,7 +11,7 @@ public class StockTest {
 
     @Test
     public void testCheckStock() {
-        assertTrue(stock.checkStock(1, 5), "Stock should be enough");
+        assertTrue(stock.checkStock(5, 5), "Stock should be enough");
         assertFalse(stock.checkStock(20, 6), "Stock should not be enough");
     }
 }
