@@ -42,44 +42,39 @@ public class Controller {
     public void start() {
         // Display MainUI in a new thread
 
-        Thread thread = new Thread(() -> {
-            communicationManager.startServer(new MessageCallback() {
-                @Override
-                public void onMessageReceived(Message message) {
-                    System.out.println("Received message at Controller: " + message.msg_type + " from " + message.src_id);
+        Thread thread = new Thread(() -> communicationManager.startServer(message -> {
+            System.out.println("Received message at Controller: " + message.msg_type + " from " + message.src_id);
 
-                    HashMap<String, String> msg_content = new HashMap<>();
-                    switch (message.msg_type) {
+            HashMap<String, String> msg_content = new HashMap<>();
+            switch (message.msg_type) {
 
-                        case req_stock -> {
-                            Item item = checkStock(message);
+                case req_stock -> {
+                    Item item = checkStock(message);
 
 
-                            msg_content.put("item_code", String.valueOf(item.code));
-                            msg_content.put("item_num", String.valueOf(item.quantity));
-                            msg_content.put("coor_x", String.valueOf(our_x));
-                            msg_content.put("coor_y", String.valueOf(our_y));
+                    msg_content.put("item_code", String.valueOf(item.code));
+                    msg_content.put("item_num", String.valueOf(item.quantity));
+                    msg_content.put("coor_x", String.valueOf(our_x));
+                    msg_content.put("coor_y", String.valueOf(our_y));
 
-                            Message msg_info = new Message(MessageType.resp_stock, src_id, message.src_id, msg_content);
-                            Message returnMsg = communicationManager.createMessage(msg_info);
-                            communicationManager.sendMessageToClient(returnMsg);
-                        }
-
-                        case req_prepay -> {
-                            boolean availabilty = checkPrepayAvailability(message);
-
-                            msg_content.put("item_code", message.msg_content.get("item_code"));
-                            msg_content.put("item_num", message.msg_content.get("item_num"));
-                            msg_content.put("availability", availabilty ? "T" : "F");
-
-                            Message msg_info = new Message(MessageType.resp_stock, src_id, message.src_id, msg_content);
-                            Message returnMsg = communicationManager.createMessage(msg_info);
-                            communicationManager.sendMessageToClient(returnMsg);
-                        }
-                    }
+                    Message msg_info = new Message(MessageType.resp_stock, src_id, message.src_id, msg_content);
+                    Message returnMsg = communicationManager.createMessage(msg_info);
+                    communicationManager.sendMessageToClient(returnMsg);
                 }
-            });
-        });
+
+                case req_prepay -> {
+                    boolean availabilty = checkPrepayAvailability(message);
+
+                    msg_content.put("item_code", message.msg_content.get("item_code"));
+                    msg_content.put("item_num", message.msg_content.get("item_num"));
+                    msg_content.put("availability", availabilty ? "T" : "F");
+
+                    Message msg_info = new Message(MessageType.resp_stock, src_id, message.src_id, msg_content);
+                    Message returnMsg = communicationManager.createMessage(msg_info);
+                    communicationManager.sendMessageToClient(returnMsg);
+                }
+            }
+        }));
         thread.start();
 
         uiManager.display("MainUI", null, null, null, null);
@@ -159,12 +154,12 @@ public class Controller {
             String garbage = uiManager.waitForInputString();
             // 이후 prepay
             // prepay 구현을 아직 안함 ㅋㅋ
-            if(minDVM != null) {
+            if (minDVM != null) {
                 uiManager.display("PrepaymentUI_1", stock.itemList(), item_g, minDVM, null);
 
                 String cardInfo = uiManager.waitForInputString();
 
-                if(cardInfo.isEmpty()){
+                if (cardInfo.isEmpty()) {
                     uiManager.display("MainUI", null, null, null, null);
                     mainAction();
                 }
@@ -173,8 +168,7 @@ public class Controller {
                 Card card = new Card(cardInfo, null, item_num * 100);
 
                 insertCard(card, true);
-            }
-            else{
+            } else {
                 uiManager.displayError("주변에 다른 DVM이 없습니다. 다시 시도해주세요");
 
                 uiManager.display("MainUI", null, null, null, null);
@@ -189,7 +183,7 @@ public class Controller {
         Card cardInfo = cardReader.getCardInfo(card);
 
 //        PaymentManager paymentManager = new PaymentManager();
-        if(!isPrepay) {
+        if (!isPrepay) {
             if (paymentManager.pay(cardInfo, cardInfo.balance)) {
                 System.out.println("Payment success");
                 uiManager.display("PaymentUI_2", stock.itemList(), item_g, null, null);
@@ -207,8 +201,7 @@ public class Controller {
                 mainAction();
 
             }
-        }
-        else{
+        } else {
             HashMap<String, String> msg_content = new HashMap<>();
             msg_content.put("item_code", String.valueOf(item_g.code));
             msg_content.put("item_num", String.valueOf(item_g.quantity));
@@ -246,11 +239,10 @@ public class Controller {
 
             } else {
 
-                if(!prePayAvailability) {
+                if (!prePayAvailability) {
                     uiManager.displayError("재고가 부족합니다");
                     selectItems(item_g.code, item_g.quantity);
-                }
-                else{
+                } else {
                     uiManager.displayError("결제에 실패했습니다! 다시 시도해주세요");
 
                     uiManager.display("MainUI", null, null, null, null);
