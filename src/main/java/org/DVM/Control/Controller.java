@@ -47,10 +47,8 @@ public class Controller {
 
             HashMap<String, String> msg_content = new HashMap<>();
             switch (message.msg_type) {
-
-                case req_stock -> {
+                case req_stock:
                     Item item = checkStock(message);
-
 
                     msg_content.put("item_code", String.valueOf(item.code));
                     msg_content.put("item_num", String.valueOf(item.quantity));
@@ -60,24 +58,27 @@ public class Controller {
                     Message msg_info = new Message(MessageType.resp_stock, src_id, message.src_id, msg_content);
                     Message returnMsg = communicationManager.createMessage(msg_info);
                     communicationManager.sendMessageToClient(returnMsg);
-                }
+                    break;
 
-                case req_prepay -> {
+                case req_prepay:
                     boolean availabilty = checkPrepayAvailability(message);
 
                     msg_content.put("item_code", message.msg_content.get("item_code"));
                     msg_content.put("item_num", message.msg_content.get("item_num"));
                     msg_content.put("availability", availabilty ? "T" : "F");
 
-                    Message msg_info = new Message(MessageType.resp_stock, src_id, message.src_id, msg_content);
-                    Message returnMsg = communicationManager.createMessage(msg_info);
-                    communicationManager.sendMessageToClient(returnMsg);
-                }
+                    Message msg_info_prepay = new Message(MessageType.resp_stock, src_id, message.src_id, msg_content);
+                    Message returnMsg_prepay = communicationManager.createMessage(msg_info_prepay);
+                    communicationManager.sendMessageToClient(returnMsg_prepay);
+                    break;
 
-                default -> System.out.println("Invalid message type");
+                default:
+                    System.out.println("Invalid message type");
+                    break;
             }
         }));
         thread.start();
+
 
         uiManager.display("MainUI", null, null, null, null);
 
