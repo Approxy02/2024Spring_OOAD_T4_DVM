@@ -73,6 +73,8 @@ public class Controller {
                     Message returnMsg = communicationManager.createMessage(msg_info);
                     communicationManager.sendMessageToClient(returnMsg);
                 }
+
+                default -> System.out.println("Invalid message type");
             }
         }));
         thread.start();
