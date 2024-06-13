@@ -23,6 +23,6 @@ Object-Oriented Analysis and Design (객체지향개발방법론)- (2024 Spring)
 
 | 팀원   |  GitHub 프로필                            |
 |----------|------------------------------------------|
-| Approxy |[Klngscrown](https://github.com/Klngscrown) |
-| inonego   |[inonego](https://github.com/inonego)     |
-| ks_nam_   |[ks_nam_](https://github.com/ks_nam_)     |
+| 지상준   |[Klngscrown](https://github.com/Klngscrown) |
+| 김희준   |[inonego](https://github.com/inonego)     |
+| 남경식   |[ks_nam_](https://github.com/ks_nam_)     |
